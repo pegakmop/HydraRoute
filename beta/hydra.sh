@@ -48,6 +48,10 @@ files_create() {
 ipset create hr1 hash:ip
 ipset create hr2 hash:ip
 ipset create hr3 hash:ip
+
+ndmc -c 'ip policy HydraRoute1st'
+ndmc -c 'ip policy HydraRoute2nd'
+ndmc -c 'ip policy HydraRoute3rd'
 EOF
 	
 ## cкрипт маркировки трафика
@@ -68,7 +72,6 @@ i=0
 for policy in $policies; do
     mark_id=$(echo "$policy_data" | jq -r ".$policy.mark")
     if [ -z "$mark_id" ]; then
-		policy_set
 		reboot
         exit 1
     fi
