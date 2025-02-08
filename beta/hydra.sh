@@ -49,9 +49,9 @@ ipset create hr1 hash:ip
 ipset create hr2 hash:ip
 ipset create hr3 hash:ip
 
-ndmc -c 'ip policy HydraRoute1st'
-ndmc -c 'ip policy HydraRoute2nd'
-ndmc -c 'ip policy HydraRoute3rd'
+ndmc -c 'ip policy HydraRoute1st' 2>/dev/null
+ndmc -c 'ip policy HydraRoute2nd' 2>/dev/null
+ndmc -c 'ip policy HydraRoute3rd' 2>/dev/null
 EOF
 	
 ## cкрипт маркировки трафика
