@@ -12,7 +12,7 @@
 3. После перезагрузки роутера:
     - установите **Beta** версию **HydraRoute**
     ```
-    curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/beta/hydra.sh" > /opt/tmp/hydra.sh && chmod +x /opt/tmp/hydra.sh && /opt/tmp/hydra.sh
+    curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/beta/hydra.sh" > /opt/tmp/hydra.sh && chmod +x /opt/tmp/hydra.sh && /opt/tmp/hydra.sh
     ```
 3. После перезагрузки роутера:
     - в веб-панели роутера перейдите:
