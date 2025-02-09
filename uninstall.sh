@@ -27,7 +27,7 @@ animation() {
 opkg_uninstall() {
 	/opt/etc/init.d/S99adguardhome kill
 	/opt/etc/init.d/S99hpanel kill
-	opkg remove adguardhome-go ipset iptables node-npm node tar
+	opkg remove adguardhome-go ipset iptables jq node-npm node tar
 }
 
 # удаление файлов
@@ -35,6 +35,8 @@ files_uninstall() {
 	chmod -R 777 /opt/etc/AdGuardHome/
 	chmod 777 /opt/etc/init.d/S52ipset
 	chmod 777 /opt/var/log/AdGuardHome.log
+	chmod 777 /opt/etc/init.d/S52hydra
+	chmod 777 /opt/etc/ndm/netfilter.d/010-hydra.sh
 	rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
 	rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
 	rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh
@@ -42,6 +44,16 @@ files_uninstall() {
 	rm -f /opt/etc/init.d/S52ipset
 	rm -rf /opt/etc/AdGuardHome/
 	rm -f /opt/var/log/AdGuardHome.log
+	rm -f /opt/etc/init.d/S52hydra
+	rm -f /opt/etc/ndm/netfilter.d/010-hydra.sh
+}
+
+# удаление политик
+policy_uninstall() {
+	ndmc -c 'no ip policy HydraRoute1st'
+	ndmc -c 'no ip policy HydraRoute2nd'
+	ndmc -c 'no ip policy HydraRoute3rd'
+	ndmc -c 'system configuration save'
 }
 
 # удаление веб-панели
@@ -85,6 +97,9 @@ animation $! "Удаление файлов HydraRoute"
 
 files_hpanel_uninstall >>"$LOG" 2>&1 &
 animation $! "Удаление веб-панели"
+
+policy_uninstall >>"$LOG" 2>&1 &
+animation $! "Удаление политик HydraRoute"
 
 firmware_check
 animation $! "Включение системного DNS"
