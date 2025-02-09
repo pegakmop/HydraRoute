@@ -71,9 +71,8 @@ policy_data=$(curl -kfsS localhost:79/rci/show/ip/policy/)
 i=0
 for policy in $policies; do
     mark_id=$(echo "$policy_data" | jq -r ".$policy.mark")
-    if [ -z "$mark_id" ]; then
+    if [ "$mark_id" = "null" ]; then
 		reboot
-        exit 1
     fi
 
     eval "mark_ids_$i=$mark_id"
