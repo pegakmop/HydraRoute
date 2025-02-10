@@ -25,7 +25,7 @@
     nano /opt/etc/AdGuardHome/ipset.conf
     ```
    
-   Пример `ipset.conf``:
+   Пример `ipset.conf`:
    ```
    instagram.com,cdninstagram.com/hr1
    openai.com,chatgpt.com/hr2
