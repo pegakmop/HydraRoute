@@ -5,12 +5,12 @@
 
 ## Установка:
 1. Подключитесь к роутеру по SSH (к Entware).
-2. Удалите старую версию **HydraRoute** :
+2. Удалите старую версию **HydraRoute** (для одарённых - удалять ее нужно если она до этого устанавливалась...):
     ```
     curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
     ```
 3. После перезагрузки роутера:
-    - установите **HydraRoute** версию **Beta 2** *(установка/переустановка/обновление)*
+    - установите **HydraRoute** версию **Beta 2**
     ```
     curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/beta/hydra.sh" > /opt/tmp/hydra.sh && chmod +x /opt/tmp/hydra.sh && /opt/tmp/hydra.sh
     ```
