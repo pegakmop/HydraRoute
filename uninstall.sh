@@ -61,7 +61,7 @@ files_hpanel_uninstall() {
 	chmod -R 777 /opt/etc/HydraRoute/
 	chmod 777 /opt/etc/init.d/S99hpanel
 	rm -rf /opt/etc/HydraRoute/
-	rm -r /opt/etc/init.d/S99hpanel
+	rm -f /opt/etc/init.d/S99hpanel
 }
 
 # проверка версии прошивки
