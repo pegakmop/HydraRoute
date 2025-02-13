@@ -5,7 +5,7 @@
 
 ## Установка:
 1. Подключитесь к роутеру по SSH (к Entware).
-2. установите **HydraRoute** версию **Beta 2**
+2. Установите **HydraRoute** версию **Beta 2**
     ```
     curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/beta/hydra.sh" > /opt/tmp/hydra.sh && chmod +x /opt/tmp/hydra.sh && /opt/tmp/hydra.sh
     ```
