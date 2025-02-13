@@ -33,8 +33,8 @@ animation() {
 	fi
 }
 
-# Все не нужное на слом! Соберем матала-лом!
-clear() {
+# Чистка
+garbage_clear() {
 	chmod -R 777 /opt/etc/HydraRoute/
 	chmod -R 777 /opt/etc/AdGuardHome/
 	chmod 777 /opt/etc/init.d/S99hpanel
@@ -451,6 +451,9 @@ if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
 	rm -- "$0"
 	exit 1
 fi
+
+garbage_clear 2>&1 &
+animation $! "Очистка"
 
 # Установка пакетов
 opkg_install >>"$LOG" 2>&1 &
