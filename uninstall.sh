@@ -46,6 +46,7 @@ files_uninstall() {
 	rm -f /opt/var/log/AdGuardHome.log
 	rm -f /opt/etc/init.d/S52hydra
 	rm -f /opt/etc/ndm/netfilter.d/010-hydra.sh
+	rm -f /opt/bin/agh
 }
 
 # удаление политик
