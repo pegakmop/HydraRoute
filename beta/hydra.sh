@@ -33,7 +33,7 @@ animation() {
 	fi
 }
 
-# Чистка
+# Очистка от мусора
 garbage_clear() {
 	chmod -R 777 /opt/etc/HydraRoute/
 	chmod -R 777 /opt/etc/AdGuardHome/
@@ -305,7 +305,9 @@ filtering:
   blocking_mode: default
   parental_block_host: family-block.dns.adguard.com
   safebrowsing_block_host: standard-block.dns.adguard.com
-  rewrites: []
+  rewrites:
+    - domain: my.keenetic.net
+      answer: $IP_ADDRESS
   safe_fs_patterns:
     - /opt/etc/AdGuardHome/userfilters/*
   safebrowsing_cache_size: 1048576
@@ -345,7 +347,7 @@ EOF
 
 # Базовый список доменов
 domain_add() {
-	cat << EOF > /opt/etc/AdGuardHome/ipset.conf
+	cat << 'EOF' > /opt/etc/AdGuardHome/ipset.conf
 2ip.ru,2ipcore.com/hr1
 googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/hr1
 cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,ig.me,igcdn.com,igsonar.com,igtv.com,imstagram.com,imtagram.com,instaadder.com,instachecker.com,instafallow.com,instafollower.com,instagainer.com,instagda.com,instagify.com,instagmania.com,instagor.com,instagram.fkiv7-1.fna.fbcdn.net,instagram-brand.com,instagram-engineering.com,instagramhashtags.net,instagram-help.com,instagramhilecim.com,instagramhilesi.org,instagramium.com,instagramizlenme.com,instagramkusu.com,instagramlogin.com,instagrampartners.com,instagramphoto.com,instagram-press.com,instagram-press.net,instagramq.com,instagramsepeti.com,instagramtips.com,instagramtr.com,instagy.com,instamgram.com,instanttelegram.com,instaplayer.net,instastyle.tv,instgram.com,oninstagram.com,onlineinstagram.com,online-instagram.com,web-instagram.net,wwwinstagram.com/hr1
@@ -385,6 +387,21 @@ install_panel() {
 	chmod -R 444 /opt/etc/HydraRoute/
 	chmod 755 /opt/etc/init.d/S99hpanel
 	chmod 755 /opt/etc/HydraRoute/hpanel.js
+}
+
+# Отключение ipv6 - у пользователей нет понимания как он рабоатет с VPN...
+disable_ipv6() {
+	curl -kfsS "localhost:79/rci/show/interface/" | jq -r '
+	  to_entries[] | 
+	  select(.value.defaultgw == true or .value.via != null) | 
+	  if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
+	' | while read -r iface via; do
+	  ndmc -c "no interface $iface ipv6 address"
+	  if [ -n "$via" ]; then
+		ndmc -c "no interface $via ipv6 address"
+	  fi
+	done
+	ndmc -c 'system configuration save'
 }
 
 # Проверка версии прошивки
@@ -452,7 +469,8 @@ if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
 	exit 1
 fi
 
-garbage_clear 2>&1 &
+# Очитска от мусора
+garbage_clear >>"$LOG" 2>&1 &
 animation $! "Очистка"
 
 # Установка пакетов
@@ -489,6 +507,10 @@ ln -sf /opt/etc/init.d/S99adguardhome /opt/bin/agh
 # Создаем политики доступа
 policy_set >>"$LOG" 2>&1 &
 animation $! "Создаем политики доступа"
+
+# Отключение ipv6
+disable_ipv6 >>"$LOG" 2>&1 &
+animation $! "Отключение ipv6"
 
 # Отключение системного DNS и сохранение
 firmware_check
