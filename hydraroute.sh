@@ -405,6 +405,21 @@ install_panel() {
 	chmod 755 /opt/etc/HydraRoute/hpanel.js
 }
 
+# Отключение ipv6 на провайдере
+disable_ipv6() {
+	curl -kfsS "localhost:79/rci/show/interface/" | jq -r '
+	  to_entries[] | 
+	  select(.value.defaultgw == true or .value.via != null) | 
+	  if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
+	' | while read -r iface via; do
+	  ndmc -c "no interface $iface ipv6 address"
+	  if [ -n "$via" ]; then
+		ndmc -c "no interface $via ipv6 address"
+	  fi
+	done
+	ndmc -c 'system configuration save'
+}
+
 # Проверка версии прошивки
 firmware_check() {
 	if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
@@ -493,6 +508,10 @@ if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
 	install_panel >>"$LOG" 2>&1 &
 	animation $! "Установка web-панели"
 fi
+
+# Отключение ipv6
+disable_ipv6 >>"$LOG" 2>&1 &
+animation $! "Отключение ipv6"
 
 # Отключение системного DNS и сохранение
 firmware_check
