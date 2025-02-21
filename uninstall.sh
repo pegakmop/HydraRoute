@@ -47,6 +47,7 @@ files_uninstall() {
 	rm -f /opt/etc/init.d/S52hydra
 	rm -f /opt/etc/ndm/netfilter.d/010-hydra.sh
 	rm -f /opt/bin/agh
+	rm -f /opt/bin/hr
 }
 
 # удаление политик
