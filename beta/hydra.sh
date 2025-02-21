@@ -144,7 +144,6 @@ EOF
 
 # Настройки AGH
 agh_setup() {
-	/opt/etc/init.d/S99adguardhome stop
 	## конфиг AdGuard Home
 	cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
 http:
