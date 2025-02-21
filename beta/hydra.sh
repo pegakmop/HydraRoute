@@ -510,8 +510,8 @@ if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
 fi
 
 # Очитска от мусора
-garbage_clear >>"$LOG" 2>&1 &
-animation $! "Очистка"
+#garbage_clear >>"$LOG" 2>&1 &
+#animation $! "Очистка"
 
 # Установка пакетов
 opkg_install >>"$LOG" 2>&1 &
