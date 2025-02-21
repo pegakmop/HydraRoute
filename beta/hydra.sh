@@ -35,6 +35,7 @@ animation() {
 
 # Очистка от мусора
 garbage_clear() {
+	/opt/etc/init.d/S99hpanel stop
 	chmod -R 777 /opt/etc/HydraRoute/
 	chmod -R 777 /opt/etc/AdGuardHome/
 	chmod 777 /opt/etc/init.d/S99hpanel
@@ -117,6 +118,27 @@ for policy in $policies; do
     "$iptables" -w -t mangle -A PREROUTING -m set --match-set "$bypass" dst -j CONNMARK --restore-mark
     i=$((i+1))
 done
+
+# nginx proxy
+NGINX_CONF="/tmp/nginx/nginx.conf"
+if grep -q "hr.net" "$NGINX_CONF"; then
+    exit
+fi
+
+IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+sed -i '$ s/}$//' "$NGINX_CONF"
+cat <<EOT >> "$NGINX_CONF"
+  server {
+    listen $IP_ADDRESS:80;
+    server_name hr.net hr.local;
+      location / {
+        proxy_pass http://$IP_ADDRESS:2000;
+      }
+    }
+}
+EOT
+
+nginx -s reload
 EOF
 }
 
@@ -189,7 +211,7 @@ dns:
   max_goroutines: 300
   handle_ddr: true
   ipset: []
-  ipset_file: /opt/etc/AdGuardHome/ipset.conf
+  ipset_file: /opt/etc/AdGuardHome/domain.conf
   bootstrap_prefer_ipv6: false
   upstream_timeout: 10s
   private_networks: []
@@ -308,6 +330,8 @@ filtering:
   rewrites:
     - domain: my.keenetic.net
       answer: $IP_ADDRESS
+    - domain: hr.net
+      answer: $IP_ADDRESS
   safe_fs_patterns:
     - /opt/etc/AdGuardHome/userfilters/*
   safebrowsing_cache_size: 1048576
@@ -347,12 +371,18 @@ EOF
 
 # Базовый список доменов
 domain_add() {
-	cat << 'EOF' > /opt/etc/AdGuardHome/ipset.conf
+	cat << 'EOF' > /opt/etc/AdGuardHome/domain.conf
+##Tunnel check
 2ip.ru,2ipcore.com/hr1
+##Youtube
 googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/hr1
+##Instagram
 cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,ig.me,igcdn.com,igsonar.com,igtv.com,imstagram.com,imtagram.com,instaadder.com,instachecker.com,instafallow.com,instafollower.com,instagainer.com,instagda.com,instagify.com,instagmania.com,instagor.com,instagram.fkiv7-1.fna.fbcdn.net,instagram-brand.com,instagram-engineering.com,instagramhashtags.net,instagram-help.com,instagramhilecim.com,instagramhilesi.org,instagramium.com,instagramizlenme.com,instagramkusu.com,instagramlogin.com,instagrampartners.com,instagramphoto.com,instagram-press.com,instagram-press.net,instagramq.com,instagramsepeti.com,instagramtips.com,instagramtr.com,instagy.com,instamgram.com,instanttelegram.com,instaplayer.net,instastyle.tv,instgram.com,oninstagram.com,onlineinstagram.com,online-instagram.com,web-instagram.net,wwwinstagram.com/hr1
-1337x.to,262203.game4you.top,eztv.re,fitgirl-repacks.site,new.megashara.net,nnmclub.to,nnm-club.to,nnm-club.me,rarbg.to,rustorka.com,rutor.info,rutor.org,rutracker.cc,rutracker.org,tapochek.net,thelastgame.ru,thepiratebay.org,thepirate-bay.org,torrentgalaxy.to,torrent-games.best,torrentz2eu.org,limetorrents.info,pirateproxy-bay.com,torlock.com,torrentdownloads.me/hr1
+##Torrent tracker
+1337x.to,262203.game4you.top,eztv.re,eztvx.to,fitgirl-repacks.site,new.megashara.net,nnmclub.to,nnm-club.to,nnm-club.me,rarbg.to,rustorka.com,rutor.info,rutor.org,rutracker.cc,rutracker.org,tapochek.net,thelastgame.ru,thepiratebay.org,thepirate-bay.org,torrentgalaxy.to,torrent-games.best,torrentz2eu.org,limetorrents.info,pirateproxy-bay.com,torlock.com,torrentdownloads.me/hr1
+##OpenAI
 chatgpt.com,openai.com,oaistatic.com,files.oaiusercontent.com,gpt3-openai.com,openai.fund,openai.org/hr1
+##GitHub
 github.com,githubusercontent.com,githubcopilot.com/hr1
 EOF
 }
@@ -368,28 +398,38 @@ policy_set() {
 	ndmc -c 'ip policy HydraRoute1st'
 	ndmc -c 'ip policy HydraRoute2nd'
 	ndmc -c 'ip policy HydraRoute3rd'
+	# Пробуем включить WG в HR1 если он есть
+	ndmc -c 'ip policy HydraRoute1st permit global Wireguard0'
+	ndmc -c 'system configuration save'
+	sleep 2
 }
 
 # Установка web-панели
 install_panel() {
 	opkg install node tar
 	mkdir -p /opt/tmp
-	/opt/etc/init.d/S99hpanel stop
-	chmod -R 777 /opt/etc/HydraRoute/
-	chmod 777 /opt/etc/init.d/S99hpanel
-	rm -rf /opt/etc/HydraRoute/
-	rm -r /opt/etc/init.d/S99hpanel
-	curl -L -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/webpanel/hpanel.tar"
+	curl -L -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
 	mkdir -p /opt/etc/HydraRoute
 	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
 	rm /opt/tmp/hpanel.tar
-	mv /opt/etc/HydraRoute/S99hpanel /opt/etc/init.d/S99hpanel
-	chmod -R 444 /opt/etc/HydraRoute/
-	chmod 755 /opt/etc/init.d/S99hpanel
-	chmod 755 /opt/etc/HydraRoute/hpanel.js
+	chmod -R +x /opt/etc/HydraRoute/
+	cat << 'EOF' >/opt/etc/init.d/S99hpanel
+#!/bin/sh
+
+ENABLED=yes
+PROCS=node
+ARGS="/opt/etc/HydraRoute/hpanel.js"
+PREARGS=""
+DESC="HydraRoute Panel"
+PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+. /opt/etc/init.d/rc.func
+EOF
+	chmod +x /opt/etc/init.d/S99hpanel
+
 }
 
-# Отключение ipv6 - у пользователей нет понимания как он рабоатет с VPN...
+# Отключение ipv6
 disable_ipv6() {
 	curl -kfsS "localhost:79/rci/show/interface/" | jq -r '
 	  to_entries[] | 
@@ -402,6 +442,7 @@ disable_ipv6() {
 	  fi
 	done
 	ndmc -c 'system configuration save'
+	sleep 2
 }
 
 # Проверка версии прошивки
@@ -432,33 +473,33 @@ dns_off_sh() {
 	fi
 	rm -- "$0"
 	read -r
-	/opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
+	/opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 2 && reboot" >>"$LOG" 2>&1
 }
 
 # Сообщение установка ОK
 complete_info() {
 	echo "Установка HydraRoute завершена"
-	echo " - панель управления доступна по адресу: http://$IP_ADDRESS:2000/"
+	echo " - панель управления доступна по адресу: hr.net"
 	echo ""
-	echo "После перезагрузки роутера включите нужный VPN в политике HydraRoute1st"
-	echo " - Приоритеты подключений -> Политики доступа в интернет"
+	echo "После перезагрузки включите нужный VPN в политике HydraRoute1st"
+	echo " - Веб-конфигуратор роутера -> Приоритеты подключений -> Политики доступа в интернет"
 	echo ""
-	echo "Нажмите Enter для перезагрузки (обязательно)."
+	echo "Перезагрузка через 5 секунд..."
 }
 
 # Сообщение установка без панели
 complete_info_no_panel() {
 	echo "HydraRoute установлен без web-панели"
-	echo " - редактирование ipset возможно только вручную (инструкция на GitHub)."
+	echo " - редактирование domain возможно только вручную (инструкция на GitHub)."
 	echo ""
 	echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
 	echo "Login: admin"
 	echo "Password: keenetic"
 	echo ""
-	echo "После перезагрузки роутера включите нужный VPN в политике HydraRoute1st"
-	echo " - Приоритеты подключений -> Политики доступа в интернет"
+	echo "После перезагрузки включите нужный VPN в политике HydraRoute1st"
+	echo " - Веб-конфигуратор роутера -> Приоритеты подключений -> Политики доступа в интернет"
 	echo ""
-	echo "Нажмите Enter для перезагрузки (обязательно)."
+	echo "Перезагрузка через 5 секунд..."
 }
 
 # === main ===
@@ -493,16 +534,16 @@ animation $! "Базовый список доменов"
 chmod_set >>"$LOG" 2>&1 &
 animation $! "Установка прав на выполнение скриптов"
 
-# !!!Под новый скрипт панель пока не написана!!!
 # установка web-панели если места больше 80Мб
-#if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
-#	PANEL="1"
-#	install_panel >>"$LOG" 2>&1 &
-#	animation $! "Установка web-панели"
-#fi
+if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
+	PANEL="1"
+	install_panel >>"$LOG" 2>&1 &
+	animation $! "Установка web-панели"
+fi
 
-# Символическая ссылка. "agh" вместо "/где-то_там/АбраКАдаБра"
+# Символические ссылки
 ln -sf /opt/etc/init.d/S99adguardhome /opt/bin/agh
+ln -sf /opt/etc/init.d/S99hpanel /opt/bin/hr
 
 # Создаем политики доступа
 policy_set >>"$LOG" 2>&1 &
@@ -523,8 +564,7 @@ if [ "$PANEL" = "1" ]; then
 else
 	complete_info_no_panel
 fi
-rm -- "$0"
 
-# Ждем Enter и ребутимся
-read -r
+# Пауза 5 сек и ребут
+sleep 5
 reboot
