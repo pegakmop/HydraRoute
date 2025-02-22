@@ -9,7 +9,7 @@
 1. Подключитесь к роутеру по SSH (к Entware).
 2. Удалите **HydraRoute** версию **0.0.2b**
 	```
-	curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
+	curl -Ls "https://raw.githubusercontent.com/pegakmop/HydraRoute/refs/heads/main/uninstall.sh" | sh
 	```
 3. После перезагрузки роутера всё будет как будто и не устанавливали **HydraRoute**
 
