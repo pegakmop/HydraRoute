@@ -37,13 +37,11 @@ animation() {
 garbage_clear() {
 	/opt/etc/init.d/S99hpanel stop
 	chmod -R 777 /opt/etc/HydraRoute/
-	chmod -R 777 /opt/etc/AdGuardHome/
 	chmod 777 /opt/etc/init.d/S99hpanel
 	chmod 777 /opt/etc/init.d/S52ipset
 	chmod 777 /opt/etc/init.d/S52hydra
 	chmod 777 /opt/etc/ndm/netfilter.d/010-hydra.sh
 	chmod 777 /opt/var/log/AdGuardHome.log
-	rm -rf /opt/etc/AdGuardHome/
 	rm -rf /opt/etc/HydraRoute/
 	rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
 	rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
@@ -510,8 +508,8 @@ if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
 fi
 
 # Очитска от мусора
-#garbage_clear >>"$LOG" 2>&1 &
-#animation $! "Очистка"
+garbage_clear >>"$LOG" 2>&1 &
+animation $! "Очистка"
 
 # Установка пакетов
 opkg_install >>"$LOG" 2>&1 &
