@@ -9,7 +9,7 @@
 1. Подключитесь к роутеру по SSH (к Entware).
 2. Установите **HydraRoute** версию **0.0.2b**
 	```
-	opkg install curl && curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/beta/hydra.sh" | sh
+	opkg install curl && curl -Ls "https://raw.githubusercontent.com/pegakmop/HydraRoute/refs/heads/main/beta/hydra.sh" | sh
 	```
 3. После перезагрузки роутера:
     - в веб-панели роутера перейдите:
