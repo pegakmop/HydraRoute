@@ -553,5 +553,5 @@ else
 fi
 
 # Пауза 5 сек и ребут
-sleep 5
+sleep 50
 reboot
