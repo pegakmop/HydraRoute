@@ -388,7 +388,7 @@ policy_set() {
 	# Пробуем включить WG в HR1 если он есть
 	ndmc -c 'ip policy HydraRoute1st permit global Wireguard0'
 	ndmc -c 'system configuration save'
-	sleep 3
+	sleep 2
 }
 
 # Установка web-панели
@@ -429,7 +429,7 @@ disable_ipv6() {
 	  fi
 	done
 	ndmc -c 'system configuration save'
-	sleep 3
+	sleep 2
 }
 
 # Проверка версии прошивки
@@ -445,7 +445,7 @@ firmware_check() {
 dns_off() {
 	ndmc -c 'opkg dns-override'
 	ndmc -c 'system configuration save'
-	sleep 3
+	sleep 2
 }
 
 # Отключение системного DNS через "nohup"
@@ -553,5 +553,5 @@ else
 fi
 
 # Пауза 5 сек и ребут
-sleep 13
+sleep 10
 reboot
