@@ -329,6 +329,8 @@ filtering:
       answer: $IP_ADDRESS
     - domain: hr.net
       answer: $IP_ADDRESS
+    - domain: hr.local
+      answer: $IP_ADDRESS
   safe_fs_patterns:
     - /opt/etc/AdGuardHome/userfilters/*
   safebrowsing_cache_size: 1048576
@@ -405,7 +407,7 @@ policy_set() {
 install_panel() {
 	opkg install node tar
 	mkdir -p /opt/tmp
-	curl -Ls -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
+	curl -Ls -o /opt/tmp/hpanel.tar "http://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
 	mkdir -p /opt/etc/HydraRoute
 	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
 	rm /opt/tmp/hpanel.tar
@@ -423,7 +425,6 @@ PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:
 . /opt/etc/init.d/rc.func
 EOF
 	chmod +x /opt/etc/init.d/S99hpanel
-
 }
 
 # Отключение ipv6
