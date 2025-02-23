@@ -408,7 +408,7 @@ install_panel() {
 	opkg install node tar
 	rm -f /opt/tmp/hpanel.tar
 	mkdir -p /opt/tmp
-	curl -Ls --retry 4 --retry-delay 2 --max-time 3 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
+	curl -Ls --retry 6 --retry-delay 5 --max-time 5 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
