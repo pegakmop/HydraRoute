@@ -406,8 +406,13 @@ policy_set() {
 # Установка web-панели
 install_panel() {
 	opkg install node tar
+	rm -f /opt/tmp/hpanel.tar
 	mkdir -p /opt/tmp
-	curl -Ls -o /opt/tmp/hpanel.tar "http://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
+	curl -Ls --retry 4 --retry-delay 2 --max-time 3 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+
 	mkdir -p /opt/etc/HydraRoute
 	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
 	rm /opt/tmp/hpanel.tar
@@ -514,7 +519,13 @@ animation $! "Очистка"
 
 # Установка пакетов
 opkg_install >>"$LOG" 2>&1 &
-animation $! "Установка необходимых пакетов"
+PID=$!
+animation $PID "Установка необходимых пакетов"
+wait $PID
+if [ $? -ne 0 ]; then
+	echo "Установка прервана..."
+    exit 1
+fi
 
 # Формирование скриптов 
 files_create >>"$LOG" 2>&1 &
@@ -534,9 +545,15 @@ animation $! "Установка прав на выполнение скрипт
 
 # установка web-панели если места больше 80Мб
 if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
-	PANEL="1"
-	install_panel >>"$LOG" 2>&1 &
-	animation $! "Установка web-панели"
+    PANEL="1"
+    install_panel >>"$LOG" 2>&1 &
+    PID=$!
+    animation $PID "Установка web-панели"
+
+    wait $PID
+    if [ $? -ne 0 ]; then
+        PANEL="0"
+    fi
 fi
 
 # Символические ссылки
