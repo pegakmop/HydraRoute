@@ -399,7 +399,7 @@ policy_set() {
 	ndmc -c 'ip policy HydraRoute3rd'
 	# Пробуем включить WG в HR1 если он есть
 	ndmc -c 'ip policy HydraRoute1st permit global Wireguard0'
-	ndmc -c 'ip policy HydraRoute1st permit global Wireguard1'
+	# ndmc -c 'ip policy HydraRoute1st permit global Wireguard1'
 	ndmc -c 'ip policy HydraRoute2nd permit global Wireguard0'
 	ndmc -c 'ip policy HydraRoute3rd permit global Wireguard0'
 	ndmc -c 'system configuration save'
