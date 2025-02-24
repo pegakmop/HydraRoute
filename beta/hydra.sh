@@ -329,6 +329,8 @@ filtering:
       answer: $IP_ADDRESS
     - domain: hr.net
       answer: $IP_ADDRESS
+    - domain: hr.local
+      answer: $IP_ADDRESS
   safe_fs_patterns:
     - /opt/etc/AdGuardHome/userfilters/*
   safebrowsing_cache_size: 1048576
@@ -371,6 +373,16 @@ domain_add() {
 	cat << 'EOF' > /opt/etc/AdGuardHome/domain.conf
 ##Tunnel check
 2ip.ru,2ipcore.com/hr1
+##Youtube
+googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/hr1
+##Instagram
+cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,ig.me,igcdn.com,igsonar.com,igtv.com,imstagram.com,imtagram.com,instaadder.com,instachecker.com,instafallow.com,instafollower.com,instagainer.com,instagda.com,instagify.com,instagmania.com,instagor.com,instagram.fkiv7-1.fna.fbcdn.net,instagram-brand.com,instagram-engineering.com,instagramhashtags.net,instagram-help.com,instagramhilecim.com,instagramhilesi.org,instagramium.com,instagramizlenme.com,instagramkusu.com,instagramlogin.com,instagrampartners.com,instagramphoto.com,instagram-press.com,instagram-press.net,instagramq.com,instagramsepeti.com,instagramtips.com,instagramtr.com,instagy.com,instamgram.com,instanttelegram.com,instaplayer.net,instastyle.tv,instgram.com,oninstagram.com,onlineinstagram.com,online-instagram.com,web-instagram.net,wwwinstagram.com/hr1
+##Torrent tracker
+1337x.to,262203.game4you.top,fitgirl-repacks.site,new.megashara.net,nnmclub.to,nnm-club.to,nnm-club.me,rarbg.to,rustorka.com,rutor.info,rutor.org,rutracker.cc,rutracker.org,tapochek.net,thelastgame.ru,thepiratebay.org,thepirate-bay.org,torrentgalaxy.to,torrent-games.best,torrentz2eu.org,limetorrents.info,pirateproxy-bay.com,torlock.com,torrentdownloads.me/hr1
+##OpenAI
+chatgpt.com,openai.com,oaistatic.com,files.oaiusercontent.com,gpt3-openai.com,openai.fund,openai.org/hr1
+##GitHub
+github.com,githubusercontent.com,githubcopilot.com/hr1
 EOF
 }
 
@@ -394,8 +406,13 @@ policy_set() {
 # Установка web-панели
 install_panel() {
 	opkg install node tar
+	rm -f /opt/tmp/hpanel.tar
 	mkdir -p /opt/tmp
-	curl -Ls -o /opt/tmp/hpanel.tar "https://github.com/pegakmop/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
+	curl -Ls --retry 6 --retry-delay 5 --max-time 5 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta/webpanel/hpanel.tar"
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+
 	mkdir -p /opt/etc/HydraRoute
 	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
 	rm /opt/tmp/hpanel.tar
@@ -413,7 +430,6 @@ PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:
 . /opt/etc/init.d/rc.func
 EOF
 	chmod +x /opt/etc/init.d/S99hpanel
-
 }
 
 # Отключение ipv6
@@ -503,7 +519,13 @@ animation $! "Очистка"
 
 # Установка пакетов
 opkg_install >>"$LOG" 2>&1 &
-animation $! "Установка необходимых пакетов"
+PID=$!
+animation $PID "Установка необходимых пакетов"
+wait $PID
+if [ $? -ne 0 ]; then
+	echo "Установка прервана..."
+    exit 1
+fi
 
 # Формирование скриптов 
 files_create >>"$LOG" 2>&1 &
@@ -523,9 +545,15 @@ animation $! "Установка прав на выполнение скрипт
 
 # установка web-панели если места больше 80Мб
 if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
-	PANEL="1"
-	install_panel >>"$LOG" 2>&1 &
-	animation $! "Установка web-панели"
+    PANEL="1"
+    install_panel >>"$LOG" 2>&1 &
+    PID=$!
+    animation $PID "Установка web-панели"
+
+    wait $PID
+    if [ $? -ne 0 ]; then
+        PANEL="0"
+    fi
 fi
 
 # Символические ссылки
@@ -553,5 +581,5 @@ else
 fi
 
 # Пауза 5 сек и ребут
-sleep 10
+sleep 5
 reboot
