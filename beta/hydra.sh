@@ -403,7 +403,7 @@ policy_set() {
 	ndmc -c 'ip policy HydraRoute2nd permit global Wireguard0'
 	ndmc -c 'ip policy HydraRoute3rd permit global Wireguard0'
 	ndmc -c 'system configuration save'
-	sleep 2
+	sleep 5
 }
 
 # Установка web-панели
