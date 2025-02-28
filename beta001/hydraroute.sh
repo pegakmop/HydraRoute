@@ -27,7 +27,12 @@ animation() {
 		done
 	done
 
-  echo -e "\b✔ Готово!"
+	wait $pid
+	if [ $? -eq 0 ]; then
+		echo -e "\b✔ Готово!"
+	else
+		echo -e "\b✖ Ошибка!"
+	fi
 }
 
 # Получение списка и выбор интерфейса
@@ -394,7 +399,10 @@ install_panel() {
 	chmod 777 /opt/etc/init.d/S99hpanel
 	rm -rf /opt/etc/HydraRoute/
 	rm -r /opt/etc/init.d/S99hpanel
-	curl -L -o /opt/tmp/hpanel.tar "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta001/webpanel/hpanel.tar"
+	curl -Ls --retry 6 --retry-delay 5 --max-time 5 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta001/webpanel/hpanel.tar"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
 	mkdir -p /opt/etc/HydraRoute
 	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
 	rm /opt/tmp/hpanel.tar
