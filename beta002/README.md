@@ -56,9 +56,9 @@
 	</details>
 
 ## Удаление:
-    ```
-    curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
-    ```
+```
+curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
+```
 
 ## Информация:
 - приоритеты подключений работают! Можно установить порядок в котором будут последовательно переключаться туннели
