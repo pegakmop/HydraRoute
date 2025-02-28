@@ -394,7 +394,7 @@ install_panel() {
 	chmod 777 /opt/etc/init.d/S99hpanel
 	rm -rf /opt/etc/HydraRoute/
 	rm -r /opt/etc/init.d/S99hpanel
-	curl -L -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta001/webpanel/hpanel.tar"
+	curl -L -o /opt/tmp/hpanel.tar "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta001/webpanel/hpanel.tar"
 	mkdir -p /opt/etc/HydraRoute
 	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
 	rm /opt/tmp/hpanel.tar
