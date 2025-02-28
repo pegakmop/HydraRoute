@@ -48,15 +48,15 @@ curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/m
 ## Планы на будущее
 ### To do
 - ~~[Web панель в паблик релиз](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~ 30/01/2025
-- ~~добавить дизайна~~ 22/02/2025 [в 0.0.2b](https://github.com/Ground-Zerro/HydraRoute/tree/main/beta)
+- ~~добавить дизайна~~ 22/02/2025 (в 0.0.2b)
 - авторизация в web панели (нужна вообще она?)
 - загрузка сторонних списокв из сети
 - ~~[переписать установщик](https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~ 01/02/2025
 
 ### Пожелания от пользоваталей
 - ~~[boosty](https://boosty.to/ground_zerro)~~ 25/01/2025
-- ~~опция: блокировать трафик если туннель не доступен (нет связи, отключен и т.п.)~~ 22/02/2025 [в 0.0.2b](https://github.com/Ground-Zerro/HydraRoute/tree/main/beta)
-- ~~раздельная маршрутизация в два туннеля. Или в три?? ;)~~ 22/02/2025 [в 0.0.2b](https://github.com/Ground-Zerro/HydraRoute/tree/main/beta)
+- ~~опция: блокировать трафик если туннель не доступен (нет связи, отключен и т.п.)~~ 22/02/2025 (в 0.0.2b)
+- ~~раздельная маршрутизация в два туннеля. Или в три?? ;)~~ 22/02/2025 (в 0.0.2b)
 - опция: автоматическое обновление списокв по расписанию
 - поддержка vless
 - ~~[анигилятор](https://github.com/Ground-Zerro/HydraRoute/blob/main/uninstall.sh)~~ 28/01/2025
