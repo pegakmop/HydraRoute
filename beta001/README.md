@@ -8,7 +8,7 @@
 1. Подключитесь к роутеру по SSH (к Entware).
 2. Выполните команду:
 ```
-curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/beta001/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
+curl -L -s "https://raw.githubusercontent.com/pegakmop/HydraRoute/refs/heads/main/beta001/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
 ```
 3. Выберите VPN из списка.
 
@@ -48,5 +48,5 @@ curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads
 
 ## Удаление:
 ```
-curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
+curl -Ls "https://raw.githubusercontent.com/pegakmop/HydraRoute/refs/heads/main/uninstall.sh" | sh
 ```
