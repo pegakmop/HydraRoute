@@ -1,4 +1,4 @@
-**v.0.0.2b(202503111800)**
+**v.0.0.2b(202503212100)**
 
 # HydraRoute
 
@@ -20,6 +20,7 @@ opkg install curl && curl -Ls "https://github.com/Ground-Zerro/HydraRoute/raw/re
 1. Через web-панель.
    - web-панель доступна по адресу: [http://hr.net/](http://hr.net/) или [http://192.168.1.1:2000/](http://192.168.1.1:2000/)
      * (где `192.168.1.1` - это IP-адрес роутера)
+	 - пароль по умолчанию "keenetic"
 
 2. Вручную, правкой файла `domain.conf`.
 
