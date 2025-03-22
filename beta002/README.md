@@ -6,11 +6,14 @@
 просто изменив подключение в политике доступа веб-интерфейса роутера.
 
 ## Установка:
-1. Подключитесь к роутеру по SSH (к Entware).
+1. Подключитесь к роутеру по SSH (к Entware), обновите пакеты и установите curl.
+	```
+	opkg update && opkg install curl
+	```
 2. Установите **HydraRoute** версию **0.0.2b**
-```
-opkg install curl && curl -Ls "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta002/hydra.sh" | sh
-```
+	```
+	curl -Ls "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta002/hydra.sh" | sh
+	```
 3. После перезагрузки роутера:
     - в веб-панели роутера перейдите:
       * Приоритеты подключений -> Политики доступа в интернет
