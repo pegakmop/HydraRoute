@@ -33,36 +33,41 @@ animation() {
 	fi
 }
 
-# Очистка от мусора
+# Очистка от прошлых версий и мусора
 garbage_clear() {
-	/opt/etc/init.d/S99hpanel stop
-	chmod -R 777 /opt/etc/HydraRoute/
-	chmod 777 /opt/etc/init.d/S99hpanel
-	chmod 777 /opt/etc/init.d/S52ipset
-	chmod 777 /opt/etc/init.d/S52hydra
-	chmod 777 /opt/etc/ndm/netfilter.d/010-hydra.sh
-	chmod 777 /opt/var/log/AdGuardHome.log
-	rm -rf /opt/etc/HydraRoute/
-	rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
-	rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
-	rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh
-	rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh
-	rm -f /opt/etc/ndm/netfilter.d/010-hydra.sh
-	rm -f /opt/etc/init.d/S52ipset
-	rm -f /opt/etc/init.d/S52hydra
-	rm -f /opt/etc/init.d/S99hpanel
-	rm -f /opt/var/log/AdGuardHome.log
+	FILES="
+	/opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
+	/opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
+	/opt/etc/ndm/netfilter.d/010-bypass.sh
+	/opt/etc/ndm/netfilter.d/011-bypass6.sh
+	/opt/etc/ndm/netfilter.d/010-hydra.sh
+	/opt/etc/init.d/S52ipset
+	/opt/etc/init.d/S52hydra
+	/opt/etc/init.d/S99hpanel
+	/opt/etc/init.d/S99hrpanel
+	/opt/var/log/AdGuardHome.log
+	/opt/bin/agh
+	/opt/bin/hr
+	/opt/bin/hrpanel
+	"
+
+	for FILE in $FILES; do
+		[ -f "$FILE" ] && chmod +x "$FILE"
+		[ -f "$FILE" ] && rm -f "$FILE"
+	done
+
+	[ -d /opt/etc/HydraRoute ] && rm -rf /opt/etc/HydraRoute
 }
 
 # Установка пакетов
 opkg_install() {
 	opkg update
-	opkg install adguardhome-go ipset iptables ip-full jq
+	opkg install adguardhome-go ipset iptables jq
 }
 
-# Создаем скрипты
+# Скрипты
 files_create() {
-## ipset для hr1,2,3
+	## ipset для hr1,2,3
 	cat << 'EOF' > /opt/etc/init.d/S52hydra
 #!/bin/sh
 
@@ -77,8 +82,9 @@ ndmc -c 'ip policy HydraRoute1st' >/dev/null 2>&1
 ndmc -c 'ip policy HydraRoute2nd' >/dev/null 2>&1
 ndmc -c 'ip policy HydraRoute3rd' >/dev/null 2>&1
 EOF
-	
-## cкрипт iptables
+	chmod +x /opt/etc/init.d/S52hydra
+
+	## cкрипт iptables
 	cat << 'EOF' > /opt/etc/ndm/netfilter.d/010-hydra.sh
 #!/bin/sh
 
@@ -170,11 +176,14 @@ EOT
 
 nginx -s reload
 EOF
+	chmod +x /opt/etc/ndm/netfilter.d/010-hydra.sh
 }
 
-# Настройки AGH
+# Конфиг AdGuard Home
 agh_setup() {
-	## конфиг AdGuard Home
+	##системный лог - off
+	sed -i 's/ *\$LOG//g' /opt/etc/AdGuardHome/adguardhome.conf
+	##кастомная конфигурация
 	cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
 http:
   pprof:
@@ -400,26 +409,26 @@ schema_version: 29
 EOF
 }
 
-# Базовый список доменов
+# Домены
 domain_add() {
+	##Сохраняем пользовательский набор доменов, если он есть
+	if [ -f /opt/etc/AdGuardHome/domain.conf ]; then
+	  dt=$(date +%Y%m%d-%H%M%S)
+	  mv /opt/etc/AdGuardHome/domain.conf "/opt/etc/AdGuardHome/backup_${dt}_domain.conf"
+	fi
+	##Базовый
 	cat << 'EOF' > /opt/etc/AdGuardHome/domain.conf
-##Tunnel check
-2ip.ru,2ipcore.com/hr1
 ##Youtube
 googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/hr1
-##Instagram
-cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,ig.me,igcdn.com,igsonar.com,igtv.com,imstagram.com,imtagram.com,instaadder.com,instachecker.com,instafallow.com,instafollower.com,instagainer.com,instagda.com,instagify.com,instagmania.com,instagor.com,instagram.fkiv7-1.fna.fbcdn.net,instagram-brand.com,instagram-engineering.com,instagramhashtags.net,instagram-help.com,instagramhilecim.com,instagramhilesi.org,instagramium.com,instagramizlenme.com,instagramkusu.com,instagramlogin.com,instagrampartners.com,instagramphoto.com,instagram-press.com,instagram-press.net,instagramq.com,instagramsepeti.com,instagramtips.com,instagramtr.com,instagy.com,instamgram.com,instanttelegram.com,instaplayer.net,instastyle.tv,instgram.com,oninstagram.com,onlineinstagram.com,online-instagram.com,web-instagram.net,wwwinstagram.com/hr1
-##Torrent tracker
-1337x.to,262203.game4you.top,eztv.re,eztvx.to,fitgirl-repacks.site,new.megashara.net,nnmclub.to,nnm-club.to,nnm-club.me,rarbg.to,rustorka.com,rutor.info,rutor.org,rutracker.cc,rutracker.org,tapochek.net,thelastgame.ru,thepiratebay.org,thepirate-bay.org,torrentgalaxy.to,torrent-games.best,torrentz2eu.org,limetorrents.info,pirateproxy-bay.com,torlock.com,torrentdownloads.me/hr1
 ##OpenAI
 chatgpt.com,openai.com,oaistatic.com,files.oaiusercontent.com,gpt3-openai.com,openai.fund,openai.org/hr1
+##Instagram
+cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,ig.me,igcdn.com,igsonar.com,igtv.com,imstagram.com,imtagram.com,instaadder.com,instachecker.com,instafallow.com,instafollower.com,instagainer.com,instagda.com,instagify.com,instagmania.com,instagor.com,instagram.fkiv7-1.fna.fbcdn.net,instagram-brand.com,instagram-engineering.com,instagramhashtags.net,instagram-help.com,instagramhilecim.com,instagramhilesi.org,instagramium.com,instagramizlenme.com,instagramkusu.com,instagramlogin.com,instagrampartners.com,instagramphoto.com,instagram-press.com,instagram-press.net,instagramq.com,instagramsepeti.com,instagramtips.com,instagramtr.com,instagy.com,instamgram.com,instanttelegram.com,instaplayer.net,instastyle.tv,instgram.com,oninstagram.com,onlineinstagram.com,online-instagram.com,web-instagram.net,wwwinstagram.com/hr1
+##ITDog Inside
+10minutemail.com,1337x.to,24.kg,4freerussia.org,4pda.to,4pna.com,5sim.net,7dniv.rv.ua,7tv.app,7tv.io,co.il,abercrombie.com,abook-club.ru,academy.terrasoft.ua,activatica.org,adguard.com,adidas.com,adminforge.de,adobe.com,ads-twitter.com,adultmult.tv,agents.media,ahrefs.com,ai-chat.bsg.brave.com,ai.com,allegro.pl,alphacoders.com,alza.hu,amazfitwatchfaces.com,amdm.ru,amedia.site,amnezia.org,amx.com,analog.com,anidub.com,anilibria.tv,anilibria.uno,animaunt.org,anime-portal.su,animebest.org,animedia.tv,animego.org,animespirit.ru,anistar.org,anistars.ru,annas-archive.org,anthropic.com,aol.com,api.service-kp.com,api.theins.info,themoviedb.org,arbat.media,archive.ph,archiveofourown.org,as6723.net,assets.heroku.com,atn.ua,att.com,attachments.f95zone.to,autodesk.com,avira.com,azathabar.com,azattyq.org,babook.org,baginya.org,baikal-journal.ru,bato.to,co.uk,bbc.com,bcbits.com,bell-sw.com,bellingcat.com,bestbuy.com,bestchange.ru,bihus.info,bitdefender.com,blackseanews.net,blinkshot.io,bluehost.com,booktracker.org,botnadzor.org,brawlstarsgame.com,broadcom.com,broncosportforum.com,btdig.com,btod.com,buanzo.org,buf.build,parsec.app,buymeacoffee.com,byteoversea.com,canva.com,canva.dev,capcut.com,carnegieendowment.org,carrefouruae.com,cats.com,cbilling.eu,cbilling.vip,cdn-telegram.org,cdn.web-platform.io,cdnbunny.org,cdromance.org,cdw.com,censortracker.org,chaos.com,chat.com,cloudflare.net,chaturbate.com,cherta.media,chess.com,cisco.com,clashofclans.com,clashroyaleapp.com,claude.ai,clickup.com,cms-twdigitalassets.com,cnd2exp.online,cock.li,codeium.com,coingate.com,coinpayments.net,coinsbee.com,coldfilm.xyz,colta.ru,comments.app,sophos.com,contabo.com,contest.com,coomer.su,microsoft.com,corsair.com,coursera.org,cpu-monkey.com,credly.com,crunchyroll.com,in.ua,cub.red,currenttime.tv,cvedetails.com,cyberghostvpn.com,cyxymu.info,daemon-tools.cc,danbooru.donmai.us,data-cdn.mbamupdates.com,decrypt.day,deepstatemap.live,delfi.lt,delfi.lv,dell.com,dellcdn.com,depositphotos.com,designify.com,nvidia.com,deviantart.com,digikey.com,digitalcontent.sky,digitalocean.com,dis.gd,discord-activities.com,discord.co,discord.com,discord.design,discord.dev,discord.gg,discord.gift,discord.gifts,discord.media,discord.new,discord.store,discord.tools,discordactivities.com,discordapp.com,discordapp.net,discordmerch.com,discordpartygames.com,discordsays.com,discours.io,disctech.com,docs.liquibase.com,dorama.live,doramalive.ru,doramy.club,dovod.online,omnissa.com,doxa.team,dpidetector.org,dreamhost.com,ducati.com,dw.com,e621.net,echofm.online,edu-cisco.org,ef.com,ef.edu,eggertspiele.de,ej.ru,ekhokavkaza.com,element14.com,elevenlabs.io,epidemz.net.co,euronews.com,euroradio.fm,eutrp.eu,everand.com,exler.ru,expres.online,extremetech.com,f1.com,f95-zone.to,facebook.com,facebook.net,fast-torrent.club,fast.com,fb.com,fbsbx.com,ficbook.net,filmitorrent.net,filmix.ac,filmix.biz,filmix.day,filmix.fm,filmix.la,flibusta.is,flibusta.net,flipboard.com,flir.com,flir.eu,flourish.studio,fls.guru,fluke.com,flukenetworks.com,fn-volga.ru,fonge.org,footballapi.pulselive.com,force-user-content.com,force.com,forklog.com,formula1.com,fortanga.org,forum.netgate.com,forum.ru-board.com,foxnews.com,fragment.com,framer.com,freedomletters.org,freeimages.com,freemedia.io,gagadget.com,gamedistribution.com,gamesrepack.com,gaming.amazon.com,gdb.rferl.org,geforcenow.com,gelbooru.com,google.com,geolocation.onetrust.com,germania.one,getoutline.com,getoutline.org,gfn.am,ghostrc.game.idtech.services,global.fncstatic.com,glpals.com,godaddy.com,gofile.io,gofundme.com,golosameriki.com,gonitro.com,goodreads.com,gpsonextra.net,gr-assets.com,grafana.com,grani.ru,graph.org,graty.me,graylog.org,grok.com,groq.com,groupon.com,guilded.gg,gulagu.net,habr.com,hackernoon.com,hackmd.io,halooglasi.com,hashicorp.com,hdkinoteatr.com,hdrezka.ac,hdrezka.ag,hdrezka.me,healthline.com,hentai-foundry.com,herokucdn.com,hetzner.com,hollisterco.com,holod.media,home-connect.com,hostgator.com,hostinger.com,hotels.com,hqporner.com,hromadske.ua,hs.fi,htmhell.dev,i.sakh.com,ibm.com,ibytedtos.com,idelreal.org,iedb.org,ign.com,iherb.com,iichan.hk,ilook.tv,tmdb.org,important-stories.com,indiehackers.com,infineon.com,intel.com,intel.de,intel.nl,com.ua,internalfb.com,intuit.com,intuitibits.com,ionos.com,iptv.online,is.fi,istories.media,itninja.com,itsmycity.ru,jamf.com,jetbrains.com,jetbrains.space,jut-su.net,jut.su,kaktus.media,kamatera.com,kara.su,kasparov.ru,kavkaz-uzel.eu,kavkazr.com,kemono.su,keysight.com,kino.pub,kinogo.ec,kinogo.la,kinogo.uk,kinovod.net,kinozal.guru,kinozal.tv,kmail-lists.com,knews.kg,knowyourmeme.com,kolsar.org,korrespondent.net,kovcheg.live,krymr.com,kupujemprodajem.com,lambdalabs.com,lamcdn.net,ldoceonline.com,leafletjs.com,libgen.li,licdn.com,lidarr.audio,lifehacker.com,lightning.ai,linear.app,linkedin.com,linktr.ee,livetv.sx,liveuamap.com,locals.md,lolz.guru,lostfilm.tv,lostfilmtv2.site,lucid.app,proton.me,mailfence.com,mailo.com,malwarebytes.com,mangadex.org,mangahub.ru,mangapark.net,mashable.com,mattermost.com,mbk-news.appspot.com,mediazona.ca,medicalnewstoday.com,medium.com,meduza.io,megapeer.vip,merezha.co,meta.com,metacritic.com,metal-archives.com,metla.press,middlewareinventory.com,mignews.com,mixcloud.com,mongodb.com,monoprice.com,more.fm,mouser.fi,mullvad.net,multporn.net,muscdn.com,musical.ly,mydoramy.club,myjetbrains.com,navalny.com,nba.com,neo4j.com,netflix.ca,netflix.com,netflix.net,netflixinvestor.com,netflixtechblog.com,netlify.com,networksolutions.com,newark.com,newsroom.porsche.com,newsru.com,newtimes.ru,nfl.com,nflxext.com,nflximg.com,nflximg.net,nflxsearch.net,nflxso.net,nflxvideo.net,ngrok.com,nhentai.com,nhl.com,nih.gov,nike.com,nippon.com,nitropdf.com,nnmclub.to,nnmstatic.win,nordvpn.com,notepad-plus-plus.org,notion-static.com,notion.com,notion.new,notion.site,notion.so,novaline.fm,novaya.no,novayagazeta.eu,novayagazeta.ru,ntc.party,ntp.msn.com,nxp.com,ocstore.com,oculus.com,ohmyswift.ru,oi.legal,okx.com,olx.ua,omv-extras.org,onfastspring.com,onlinesim.io,onshape.com,openmedia.io,opensea.io,opposition-news.com,oracle.com,ovd.info,ovd.legal,ovd.news,ovdinfo.org,ozodi.org,pages.dev,pap.pl,paperpaper.io,paperpaper.ru,patreon.com,patriot.dp.ua,pcgamesn.com,pcmag.com,periscope.tv,pexels.com,phncdn.com,phncdn.com.sds.rncdn7.com,pimpletv.ru,pingdom.com,piratbit.top,pkgs.tailscale.com,platform.activestate.com,playboy.com,plugshare.com,polit.ru,politico.eu,politiken.dk,polymarket.com,pornhub.com,pornhub.org,pornolab.net,portal.lviv.ua,posle.media,postimees.ee,pravda.com,premierleague.com,primevideo.com,privatekeys.pw,prnt.sc,proekt.media,prosleduetmedia.com,prostovpn.org,protonvpn.com,provereno.media,prowlarr.com,pscp.tv,psiphon.ca,qt.io,quickconnect.to,quiz.directory,quora.com,r4.err.ee,radiosakharov.org,radiosvoboda.org,rbc.ua,reactflow.dev,realist.online,recraft.ai,reddxxx.com,redgifs.com,redis.io,redshieldvpn.com,remna.st,remove.bg,render-state.to,rentry.co,rentry.org,republic.ru,research.net,returnyoutubedislikeapi.com,rezka.ag,rezka.my,rezkify.com,rezonans.media,rf.dobrochan.net,riperam.org,roar-review.com,root-nation.com,rublacklist.net,rule34.art,rus.delfi.ee,rus.jauns.lv,rutor.info,rutor.is,rutor.org,rutracker.cc,rutracker.net,rutracker.org,rutracker.wiki,sakhalin.info,sakharovfoundation.org,salesforce-experience.com,salesforce-hub.com,salesforce-scrt.com,salesforce-setup.com,salesforce-sites.com,salesforce.com,salesforceiq.com,salesforceliveagent.com,sap.com,saverudata.net,sdxcentral.com,seasonvar.ru,selezen.org,semnasem.org,sentry.io,sephora.com,servarr.com,severreal.org,sfdcopens.com,shikimori.me,shiza-project.com,shop.gameloft.com,showip.net,sibreal.org,signal.org,simplex.chat,simplex.im,simplix.info,singlekey-id.com,site.com,skat.media,sketchup.com,skiff.com,skladchik.com,sklatchiki.ru,sky.com,skycdp.com,slashlib.me,slavicsac.com,smartbear.co,smartbear.com,smartdeploy.com,snort.org,snyk.io,sobesednik.com,solarwinds.com,sora.com,soundcloud.com,sovetromantica.com,spacelift.io,spektr.press,spitfireaudio.com,spotify.com,spreadthesign.com,sputnikipogrom.com,squadbustersgame.com,squareup.com,squietpc.com,static.lostfilm.top,statology.org,steamstat.info,strana.news,strana.today,strava.com,supercell.com,support.xerox.com,surfshark.com,surveymonkey.com,suspilne.media,svoboda.org,svoi.kr.ua,svtv.org,swagger.io,swissinfo.ch,synoforum.com,t.co,t.me,tableau.com,talosintelligence.com,tayga.info,tdesktop.com,te-st.org,teamviewer.com,telega.one,telegra.ph,telegraf.by,telegraf.news,telegram-cdn.org,telegram.dog,telegram.me,telegram.org,telegram.space,telemetr.io,telesco.pe,tellapart.com,tempmail.plus,temu.com,terraform.io,tg.dev,the-village.ru,theaudiodb.com,thebarentsobserver.com,thebell.io,theins.press,theins.ru,thetruestory.news,threads.net,threema.ch,ti.com,tidal.com,tik-tokapi.com,tiktok.com,tiktokcdn-eu.com,tiktokcdn-us.com,tiktokcdn.com,tiktokd.net,tiktokd.org,tiktokv.com,tiktokv.us,tiktokw.us,timberland.de,tmdb-image-prod.b-cdn.net,tmdb.com,torrenteditor.com,torrentgalaxy.to,trailblazer.me,trailhead.com,trellix.com,trueblackmetalradio.com,tsmc.com,ttwstatic.com,turbobit.net,tuta.com,tuta.io,tutanota.com,tvfreedom.io,tvrain.ru,tvrain.tv,tweetdeck.com,twimg.com,twirpx.com,twitpic.com,twitter.biz,twitter.com,twitter.jp,twittercommunity.com,twitterflightschool.com,twitterinc.com,twitteroauth.com,twitterstat.us,twtrdns.net,twttr.com,twttr.net,twvid.com,tx.me,typing.com,uaudio.com,ukr.net,ukr.radio,ukrtelcdn.net,unian.ua,unscreen.com,upwork.com,usa.one,usercontent.dev,vagrantcloud.com,veeam.com,verstka.media,vesma.one,vesma.today,vice.com,vine.co,vipergirls.to,visualcapitalist.com,vmware.com,vndb.org,voanews.com,voidboost.cc,volkswagen-classic-parts.com,vot-tak.tv,vpngate.net,vpngen.org,vpnlove.me,vpnpay.io,w.atwiki.jp,walmart.com,watermarkremover.io,weather.com,webnames.ca,webtoons.com,weebly.com,welt.de,widgetapp.stream,wiki.fextralife.com,wikidot.com,wilsoncenter.org,windows10spotlight.com,wonderzine.com,wpengine.com,x.ai,x.com,xhamster.com,xhamsterlive.com,xsts.auth.xboxlive.com,xtracloud.net,xv-ru.com,xvideos.com,yle.fi,youtube-nocookie.com,youtubekids.com,yummyani.me,zahav.ru,zapier.com,zbigz.com,zedge.net,zendesk.com,zerkalo.io,zona.media/hr1
+##Antifilter community edition
+protonmail.com,aftermarket.schaeffler.com,aftermarket.zf.com,agentura.ru,alberta.ca,animestars.org,api.app.prod.grazie.aws.intellij.net,api.github.com,githubcopilot.com,api.protonmail.ch,api.radarr.video,aplawrence.com,app.amplitude.com,app.m3u.in,app.paraswap.io,app.zerossl.com,appstorrent.ru,aqicn.org,elastic.co,atlassian.com,grazie.ai,bitbucket.org,bitcoin.org,bitru.org,boosteroid.com,bosch-home.com,bradyid.com,t-ru.org,certifytheweb.com,buckaroo.nl,citrix.com,clamav.net,cloudflare-dns.com,copilot-proxy.githubusercontent.com,czx.to,d.docs.live.net,deezer.com,devops.com,discordapp.io,discordapp.org,discordstatus.com,torproject.org,redis.com,documentation.meraki.com,lenovo.com,wetransfer.com,doxajournal.ru,dual-a-0001.a-msedge.net,bing.com,ehorussia.com,envato.com,etsy.com,event.on24.com,fex.net,firefly-ps.adobe.io,flashscore.com,fork.pet,forum.voynaplemyon.com,ubnt.com,gallery.zetalliance.org,geni.us,genius.com,gitlab.io,gnome-look.org,googletagmanager.com,gordonua.com,grammarly.com,hd.zetfix.online,holod.global.ssl.fastly.net,honeywell.com,hyperhost.ua,island-of-pleasure.site,kemono.party,kinobase.org,kinokopilka.pro,kinozal.me,kpapp.link,lib.rus.ec,libgen.rs,linuxiac.com,localbitcoins.com,login.amd.com,lostfilm.run,lostfilm.win,macpaw.com,macvendors.com,mdza.io,mediazona.online,megapeer.ru,memohrc.org,meteo.paraplan.net,monster.ie,mouser.com,mrakopedia.net,myworld-portal.leica-geosystems.com,nasvsehtoshnit.ru,netapp.com,newstudio.tv,nyaa.si,nyaa.tracker.wf,oasis.app,onlineradiobox.com,onlinesim.ru,openwrt.wk.cz,orbit-games.com,os.mbed.com,packages.gitlab.com,pandasecurity.com,paypal.com,pb.wtf,pcbway.com,pcbway.ru,php.su,piccy.info,pixiv.net,plab.site,portal.bgpmon.net,redtube.com,refactoring.guru,refinitiv.com,repo.mongodb.org,resp.app,rus-media.org,rustorka.com,rutracker.ru,s3-1.amazonaws.com,saverudata.info,searchfloor.org,sebeanus.online,seedoff.zannn.top,serpstat.com,siemens-home.bsh-group.com,skyscanner.com,slideshare.net,snapmagic.com,soapui.org,sobesednik.ru,static-ss.xvideos-cdn.com,stulchik.net,support.cambiumnetworks.com,support.huawei.com,support.ruckuswireless.com,sysdig.com,thepiratebay.org,timberland.com,tjournal.ru,torrent.by,tracker.opentrackr.org,ufile.io,underver.se,unfiltered.adguard-dns.com,unian.net,uniongang.tv,vectorworks.net,velocidrone.com,veritas.com,zetflix.online,viber.com,vipdrive.net,vrv.co,vyos.io,watchguard.com,wheather.com,windguru.cz,wixmp.com,wunderground.com,www.hrw.org,www.jabra.com,www.lostfilmtv5.site,www.microchip.com,www.moscowtimes.ru,www.postfix.org,www.qualcomm.com,www.smashwords.com,www.stalker2.com,www.wikiart.org,xnxx.com,yeggi.com,znanija.com,zohomail.com/hr1
 EOF
-}
-
-# Установка прав на скрипты
-chmod_set() {
-	chmod +x /opt/etc/init.d/S52hydra
-	chmod +x /opt/etc/ndm/netfilter.d/010-hydra.sh
 }
 
 # Добавление политик доступа
@@ -435,45 +444,85 @@ policy_set() {
 
 # Установка web-панели
 install_panel() {
-	opkg install node tar
-	rm -f /opt/tmp/hpanel.tar
-	mkdir -p /opt/tmp
-	curl -Ls --retry 6 --retry-delay 5 --max-time 5 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta002/webpanel/hpanel.tar"
-	if [ $? -ne 0 ]; then
-		exit 1
+	ARCH=$(opkg print-architecture | awk '
+	/^arch/ && $2 !~ /_kn$/ && $2 ~ /-[0-9]+\.[0-9]+$/ {
+	  print $2; exit
+	}'
+	)
+
+	if [ -z "$ARCH" ]; then
+	echo "Не удалось определить архитектуру."
+	exit 1
 	fi
 
+	case "$ARCH" in
+	aarch64-3.10)
+	  URL="https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/main/repo/aarch64-k3.10/hrpanel_0.0.2-1_aarch64-3.10.bin.gz"
+	  ;;
+	mipsel-3.4)
+	  URL="https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/main/repo/mipselsf-k3.4/hrpanel_0.0.2-1_mipsel-3.4.bin.gz"
+	  ;;
+	mips-3.4)
+	  URL="https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/main/repo/mipssf-k3.4/hrpanel_0.0.2-1_mips-3.4.bin.gz"
+	  ;;
+	*)
+	  echo "Неизвестная архитектура: $ARCH"
+	  exit 1
+	  ;;
+	esac
+
+	TMP_DEST="/opt/tmp/hrpanel.bin.gz"
+	FINAL_DEST="/opt/bin/hrpanel"
+
+	curl -Ls --retry 5 --retry-delay 5 --connect-timeout 5 --retry-all-errors -o "$TMP_DEST" "$URL"
+	if [ $? -ne 0 ]; then
+	echo "Ошибка загрузки: $URL"
+	exit 1
+	fi
+
+	gunzip -c "$TMP_DEST" > "$FINAL_DEST"
+	rm -f "$TMP_DEST"
+	chmod +x "$FINAL_DEST"
+	ln -sf /opt/etc/init.d/S99hrpanel /opt/bin/hr
 	mkdir -p /opt/etc/HydraRoute
-	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
-	rm /opt/tmp/hpanel.tar
-	chmod -R +x /opt/etc/HydraRoute/
-	cat << 'EOF' >/opt/etc/init.d/S99hpanel
+	
+	cat << 'EOF' >/opt/etc/HydraRoute/login.scrt
+a2VlbmV0aWM=
+EOF
+	
+	cat << 'EOF' >/opt/etc/init.d/S99hrpanel
 #!/bin/sh
 
 ENABLED=yes
-PROCS=node
-ARGS="/opt/etc/HydraRoute/hpanel.js"
+PROCS=hrpanel
+ARGS=""
 PREARGS=""
-DESC="HydraRoute Panel"
+DESC=$PROCS
 PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 . /opt/etc/init.d/rc.func
 EOF
-	chmod +x /opt/etc/init.d/S99hpanel
+	chmod +x /opt/etc/init.d/S99hrpanel
 }
 
-# Отключение ipv6
-disable_ipv6() {
-	curl -kfsS "localhost:79/rci/show/interface/" | jq -r '
+# Отключение ipv6 и DNS провайдера
+disable_ipv6_and_dns() {
+	curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
 	  to_entries[] | 
 	  select(.value.defaultgw == true or .value.via != null) | 
 	  if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
 	' | while read -r iface via; do
+	  echo "Отключаю IPv6 и DNS на интерфейсе: $iface"
 	  ndmc -c "no interface $iface ipv6 address"
+	  ndmc -c "interface $iface no ip name-servers"
+
 	  if [ -n "$via" ]; then
+		echo "Отключаю IPv6 и DNS на вложенном интерфейсе: $via"
 		ndmc -c "no interface $via ipv6 address"
+		ndmc -c "interface $via no ip name-servers"
 	  fi
 	done
+
 	ndmc -c 'system configuration save'
 	sleep 2
 }
@@ -513,7 +562,7 @@ dns_off_sh() {
 complete_info() {
 	echo "Установка HydraRoute завершена"
 	echo " - панель управления доступна по адресу: hr.net"
-	echo " - пароль keenetic"
+	echo " - пароль: keenetic"
 	echo ""
 	echo "После перезагрузки включите нужный VPN в политике HydraRoute1st"
 	echo " - Веб-конфигуратор роутера -> Приоритеты подключений -> Политики доступа в интернет"
@@ -537,15 +586,15 @@ complete_info_no_panel() {
 }
 
 # === main ===
-# Выход если места меньше 80Мб
-if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
+# Выход если места меньше 40Мб
+if [ "$AVAILABLE_SPACE" -lt 40960 ]; then
 	echo "Не достаточно места для установки" >>"$LOG" 2>&1
 	rm -- "$0"
 	exit 1
 fi
 
 # Очитска от мусора
-garbage_clear >>"$LOG" 2>&1 &
+( garbage_clear >>"$LOG" 2>&1; exit 0 ) &
 animation $! "Очистка"
 
 # Установка пакетов
@@ -570,38 +619,28 @@ animation $! "Настройка AdGuard Home"
 domain_add >>"$LOG" 2>&1 &
 animation $! "Базовый список доменов"
 
-# Установка прав на выполнение скриптов
-chmod_set >>"$LOG" 2>&1 &
-animation $! "Установка прав на выполнение скриптов"
+# Установка web-панели
+install_panel >>"$LOG" 2>&1 &
+PID=$!
+animation $PID "Установка web-панели"
 
-# установка web-панели если места больше 80Мб
-if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
-    PANEL="1"
-    install_panel >>"$LOG" 2>&1 &
-    PID=$!
-    animation $PID "Установка web-панели"
+wait $PID
+[ $? -eq 0 ] && PANEL="1" || PANEL="0"
 
-    wait $PID
-    if [ $? -ne 0 ]; then
-        PANEL="0"
-    fi
-fi
-
-# Символические ссылки
+# Символическая ссылка AGH
 ln -sf /opt/etc/init.d/S99adguardhome /opt/bin/agh
-ln -sf /opt/etc/init.d/S99hpanel /opt/bin/hr
 
 # Создаем политики доступа
 policy_set >>"$LOG" 2>&1 &
 animation $! "Создаем политики доступа"
 
-# Отключение ipv6
-disable_ipv6 >>"$LOG" 2>&1 &
-animation $! "Отключение ipv6"
+# Отключение ipv6 и DNS провайдера
+disable_ipv6_and_dns >>"$LOG" 2>&1 &
+animation $! "Отключение ipv6 и DNS провайдера"
 
-# Отключение системного DNS и сохранение
+# Отключение системного DNS сервера и сохранение
 firmware_check
-animation $! "Отключение системного DNS"
+animation $! "Отключение системного DNS сервера"
 
 # Завершение
 echo ""
@@ -613,4 +652,5 @@ fi
 
 # Пауза 5 сек и ребут
 sleep 5
+[ -f "$0" ] && rm "$0"
 reboot

@@ -49,8 +49,8 @@ curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/m
 ### To do
 - ~~[Web панель в паблик релиз](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~ 30/01/2025
 - ~~добавить дизайна~~ 22/02/2025 (в 0.0.2b)
-- авторизация в web панели (нужна вообще она?)
-- загрузка сторонних списокв из сети
+- ~~авторизация в web панели~~ 23/03/2025 (в 0.0.2b)
+- ~~загрузка сторонних списокв из сети~~ 23/03/2025 (в 0.0.2b)
 - ~~[переписать установщик](https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~ 01/02/2025
 
 ### Пожелания от пользоваталей
