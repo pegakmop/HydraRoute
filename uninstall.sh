@@ -25,10 +25,10 @@ animation() {
 
 # удаление пакетов
 opkg_uninstall() {
-	/opt/etc/init.d/S99adguardhome kill
-	/opt/etc/init.d/S99hpanel kill
-	/opt/etc/init.d/S99hrpanel kill
-	opkg remove adguardhome-go ipset iptables jq node-npm node tar
+	/opt/etc/init.d/S99adguardhome stop
+	/opt/etc/init.d/S99hpanel stop
+	/opt/etc/init.d/S99hrpanel stop
+	opkg remove ipset iptables adguardhome-go jq node-npm node
 }
 
 # удаление файлов
@@ -50,8 +50,8 @@ files_uninstall() {
 	"
 
 	for FILE in $FILES; do
-		[ -f "$FILE" ] && chmod +x "$FILE"
-		[ -f "$FILE" ] && rm -f "$FILE"
+		chmod +x "$FILE"
+		rm -f "$FILE"
 	done
 
 	[ -d /opt/etc/HydraRoute ] && rm -rf /opt/etc/HydraRoute
@@ -64,6 +64,7 @@ policy_uninstall() {
 	ndmc -c 'no ip policy HydraRoute2nd'
 	ndmc -c 'no ip policy HydraRoute3rd'
 	ndmc -c 'system configuration save'
+	sleep 2
 }
 
 # проверка версии прошивки
@@ -75,14 +76,34 @@ firmware_check() {
 	fi
 }
 
-# включение системного DNS
+# включение IPv6 и DNS провайдера
+enable_ipv6_and_dns() {
+	curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
+	  to_entries[] | 
+	  select(.value.defaultgw == true or .value.via != null) | 
+	  if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
+	' | while read -r iface via; do
+	  ndmc -c "interface $iface ipv6 address auto"
+	  ndmc -c "interface $iface ip name-servers"
+
+	  if [ -n "$via" ]; then
+		ndmc -c "interface $via ipv6 address auto"
+		ndmc -c "interface $via ip name-servers"
+	  fi
+	done
+
+ndmc -c 'system configuration save'
+sleep 2
+}
+
+# включение системного DNS сервера
 dns_on() {
 	ndmc -c 'opkg no dns-override'
 	ndmc -c 'system configuration save'
 	sleep 2
 }
 
-# включение системного DNS через "nohup"
+# включение системного DNS сервера через "nohup"
 dns_on_sh() {
 	opkg install coreutils-nohup >>"$LOG" 2>&1
 	echo "Удаление завершено (╥_╥)"
@@ -90,6 +111,10 @@ dns_on_sh() {
 	echo "Перезагрузка..."
 	/opt/bin/nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 2 && reboot" >>"$LOG" 2>&1
 }
+
+#main
+enable_ipv6_and_dns >>"$LOG" 2>&1 &
+animation $! "Включение IPv6 и DNS провайдера"
 
 opkg_uninstall >>"$LOG" 2>&1 &
 animation $! "Удаление opkg пакетов"
@@ -101,8 +126,9 @@ policy_uninstall >>"$LOG" 2>&1 &
 animation $! "Удаление политик HydraRoute"
 
 firmware_check
-animation $! "Включение системного DNS"
+animation $! "Включение системного DNS сервера"
 
 echo "Удаление завершено (╥_╥)"
 echo "Перезагрузка..."
+rm -- "$0"
 reboot
