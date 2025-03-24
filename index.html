@@ -9,7 +9,7 @@
             list-style-type: none;
             padding-left: 0;
         }
-        
+
         li {
             margin: 0;
         }
@@ -78,7 +78,9 @@
 
                     let li = document.createElement("li");
                     let a = document.createElement("a");
-                    a.href = item.type === "dir" ? "#" : item.download_url;
+                    a.href = item.type === "dir"
+                        ? "#"
+                        : `https://${owner}.github.io/${repo}/${item.path}`;
                     a.textContent = item.name;
 
                     li.appendChild(a);
