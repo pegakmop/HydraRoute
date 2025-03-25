@@ -50,7 +50,7 @@ curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/m
 - ~~[Web панель в паблик релиз](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~ 30/01/2025
 - ~~добавить дизайна~~ 22/02/2025 (в 0.0.2b)
 - ~~авторизация в web панели~~ 23/03/2025 (в 0.0.2b)
-- ~~загрузка сторонних списокв из сети~~ 23/03/2025 (в 0.0.2b)
+- ~~загрузка сторонних списков из сети~~ 23/03/2025 (в 0.0.2b)
 - ~~[переписать установщик](https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~ 01/02/2025
 - придумать лого
 - ipk формат
@@ -63,6 +63,6 @@ curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/m
 - ~~[boosty](https://boosty.to/ground_zerro)~~ 25/01/2025
 - ~~опция: блокировать трафик если туннель не доступен (нет связи, отключен и т.п.)~~ 22/02/2025 (в 0.0.2b)
 - ~~раздельная маршрутизация в два туннеля. Или в три?? ;)~~ 22/02/2025 (в 0.0.2b)
-- опция: автоматическое обновление списокв по расписанию
+- опция: автоматическое обновление списков по расписанию
 - поддержка vless
 - ~~[анигилятор](https://github.com/Ground-Zerro/HydraRoute/blob/main/uninstall.sh)~~ 28/01/2025
