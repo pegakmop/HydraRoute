@@ -78,22 +78,28 @@ firmware_check() {
 
 # включение IPv6 и DNS провайдера
 enable_ipv6_and_dns() {
-	curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
-	  to_entries[] | 
-	  select(.value.defaultgw == true or .value.via != null) | 
-	  if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
-	' | while read -r iface via; do
-	  ndmc -c "interface $iface ipv6 address auto"
-	  ndmc -c "interface $iface ip name-servers"
+  interfaces=$(curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
+    to_entries[] | 
+    select(.value.defaultgw == true or .value.via != null) | 
+    if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
+  ')
 
-	  if [ -n "$via" ]; then
-		ndmc -c "interface $via ipv6 address auto"
-		ndmc -c "interface $via ip name-servers"
-	  fi
-	done
+  for line in $interfaces; do
+    set -- $line
+    iface=$1
+    via=$2
 
-ndmc -c 'system configuration save'
-sleep 2
+    ndmc -c "interface $iface ipv6 address auto" 2>/dev/null
+    ndmc -c "interface $iface ip name-servers" 2>/dev/null
+
+    if [ -n "$via" ]; then
+      ndmc -c "interface $via ipv6 address auto" 2>/dev/null
+      ndmc -c "interface $via ip name-servers" 2>/dev/null
+    fi
+  done
+
+  ndmc -c 'system configuration save' 2>/dev/null
+  sleep 2
 }
 
 # включение системного DNS сервера
