@@ -2,7 +2,7 @@
 
 # Служебные функции и переменные
 LOG="/opt/var/log/HydraRoute.log"
-echo "$(date "+%Y-%m-%d %H:%M:%S") Запуск установки" >>"$LOG" 2>&1
+printf "\n%s Запуск установки\n" "$(date "+%Y-%m-%d %H:%M:%S")" >>"$LOG" 2>&1
 REQUIRED_VERSION="4.2.3"
 IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
@@ -52,11 +52,10 @@ garbage_clear() {
 	"
 
 	for FILE in $FILES; do
-		[ -f "$FILE" ] && chmod +x "$FILE"
-		[ -f "$FILE" ] && rm -f "$FILE"
+		[ -f "$FILE" ] && { chmod 777 "$FILE" || true; rm -f "$FILE"; }
 	done
 
-	[ -d /opt/etc/HydraRoute ] && rm -rf /opt/etc/HydraRoute
+	[ -d /opt/etc/HydraRoute ] && { chmod -R 777 /opt/etc/HydraRoute || true; rm -rf /opt/etc/HydraRoute; }
 }
 
 # Установка пакетов
@@ -507,19 +506,23 @@ EOF
 
 # Отключение ipv6 и DNS провайдера
 disable_ipv6_and_dns() {
-	curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
+	interfaces=$(curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
 	  to_entries[] | 
 	  select(.value.defaultgw == true or .value.via != null) | 
 	  if .value.via then "\(.value.id) \(.value.via)" else "\(.value.id)" end
-	' | while read -r iface via; do
-	  echo "Отключаю IPv6 и DNS на интерфейсе: $iface"
-	  ndmc -c "no interface $iface ipv6 address"
-	  ndmc -c "interface $iface no ip name-servers"
+	')
+
+	for line in $interfaces; do
+	  set -- $line
+	  iface=$1
+	  via=$2
+
+	  ndmc -c "no interface $iface ipv6 address" 2>/dev/null
+	  ndmc -c "interface $iface no ip name-servers" 2>/dev/null
 
 	  if [ -n "$via" ]; then
-		echo "Отключаю IPv6 и DNS на вложенном интерфейсе: $via"
-		ndmc -c "no interface $via ipv6 address"
-		ndmc -c "interface $via no ip name-servers"
+		ndmc -c "no interface $via ipv6 address" 2>/dev/null
+		ndmc -c "interface $via no ip name-servers" 2>/dev/null
 	  fi
 	done
 
@@ -589,7 +592,7 @@ complete_info_no_panel() {
 # Выход если места меньше 40Мб
 if [ "$AVAILABLE_SPACE" -lt 40960 ]; then
 	echo "Не достаточно места для установки" >>"$LOG" 2>&1
-	rm -- "$0"
+	[ -f "$0" ] && rm "$0"
 	exit 1
 fi
 
