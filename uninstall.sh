@@ -2,7 +2,7 @@
 
 # Служебные функции и переменные
 LOG="/opt/var/log/HydraRoute.log"
-echo "$(date "+%Y-%m-%d %H:%M:%S") Удаление" >> "$LOG"
+printf "\n%s Удаление\n" "$(date "+%Y-%m-%d %H:%M:%S")" >>"$LOG" 2>&1
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
 REQUIRED_VERSION="4.2.3"
 ## анимация
@@ -28,7 +28,7 @@ opkg_uninstall() {
 	/opt/etc/init.d/S99adguardhome stop
 	/opt/etc/init.d/S99hpanel stop
 	/opt/etc/init.d/S99hrpanel stop
-	opkg remove ipset iptables adguardhome-go jq node-npm node
+	opkg remove adguardhome-go ipset iptables jq node-npm node
 }
 
 # удаление файлов
@@ -50,12 +50,11 @@ files_uninstall() {
 	"
 
 	for FILE in $FILES; do
-		chmod +x "$FILE"
-		rm -f "$FILE"
+		[ -f "$FILE" ] && { chmod 777 "$FILE" || true; rm -f "$FILE"; }
 	done
 
-	[ -d /opt/etc/HydraRoute ] && rm -rf /opt/etc/HydraRoute
-	[ -d /opt/etc/AdGuardHome ] && rm -rf /opt/etc/AdGuardHome
+	[ -d /opt/etc/HydraRoute ] && { chmod -R 777 /opt/etc/HydraRoute || true; rm -rf /opt/etc/HydraRoute; }
+	[ -d /opt/etc/AdGuardHome ] && { chmod -R 777 /opt/etc/AdGuardHome || true; rm -rf /opt/etc/AdGuardHome; }
 }
 
 # удаление политик
@@ -136,5 +135,5 @@ animation $! "Включение системного DNS сервера"
 
 echo "Удаление завершено (╥_╥)"
 echo "Перезагрузка..."
-#rm -- "$0"
+[ -f "$0" ] && rm "$0"
 reboot
