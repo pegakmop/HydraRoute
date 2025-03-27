@@ -70,16 +70,14 @@ files_create() {
 	cat << 'EOF' > /opt/etc/init.d/S52hydra
 #!/bin/sh
 
-ipset create hr1 hash:ip
-ipset create hr2 hash:ip
-ipset create hr3 hash:ip
-ipset create hr1v6 hash:ip family inet6
-ipset create hr2v6 hash:ip family inet6
-ipset create hr3v6 hash:ip family inet6
+for n in 1 2 3; do
+    ipset create hr$n hash:ip
+    ipset create hr${n}v6 hash:ip family inet6
+done
 
-ndmc -c 'ip policy HydraRoute1st' >/dev/null 2>&1
-ndmc -c 'ip policy HydraRoute2nd' >/dev/null 2>&1
-ndmc -c 'ip policy HydraRoute3rd' >/dev/null 2>&1
+for suffix in 1st 2nd 3rd; do
+    ndmc -c "ip policy HydraRoute$suffix"
+done
 EOF
 	chmod +x /opt/etc/init.d/S52hydra
 
@@ -87,72 +85,48 @@ EOF
 	cat << 'EOF' > /opt/etc/ndm/netfilter.d/010-hydra.sh
 #!/bin/sh
 
+[ "$type" = "iptables" ] || [ "$type" = "ip6tables" ] || exit
+[ "$table" = "mangle" ] || exit
+
 policies="HydraRoute1st HydraRoute2nd HydraRoute3rd"
 bypasses="hr1 hr2 hr3"
 bypassesv6="hr1v6 hr2v6 hr3v6"
 
-if [ "$type" != "iptables" ]; then
-    if [ "$type" != "ip6tables" ]; then
-        exit
-    fi
-fi
+policy_data=$(curl -kfsS localhost:79/rci/show/ip/policy/) || exit 1
 
-if [ "$table" != "mangle" ]; then
-    exit
-fi
-
-# policy markID
-policy_data=$(curl -kfsS localhost:79/rci/show/ip/policy/)
-
-i=0
+i=1
 for policy in $policies; do
     mark_id=$(echo "$policy_data" | jq -r ".$policy.mark")
-    if [ "$mark_id" = "null" ]; then
-		i=$((i+1))
-        continue
-    fi
-
-    eval "mark_ids_$i=$mark_id"
-    i=$((i+1))
+    eval "mark_$i=$mark_id"
+    i=$((i + 1))
 done
 
-# ipv4
-iptables_mangle_save=$(iptables-save -t mangle)
-i=0
-for policy in $policies; do
-    bypass=$(echo $bypasses | cut -d' ' -f$((i+1)))
-    mark_id=$(eval echo \$mark_ids_$i)
+apply_rules() {
+    table_cmd="$1"
+    bypasses_list="$2"
+    saved_rules="$3"
 
-    ! ipset list "$bypass" >/dev/null 2>&1 && i=$((i+1)) && continue
+    i=1
+    for bypass in $bypasses_list; do
+        eval "mark_id=\$mark_$i"
+        [ "$mark_id" = "null" ] && i=$((i + 1)) && continue
 
-    if echo "$iptables_mangle_save" | grep -qE -- "--match-set $bypass dst -j CONNMARK --restore-mark"; then
-        i=$((i+1))
-        continue
-    fi
+        ipset list "$bypass" >/dev/null 2>&1 || { i=$((i + 1)); continue; }
 
-    iptables -w -t mangle -A PREROUTING -m conntrack --ctstate NEW -m set --match-set "$bypass" dst -j CONNMARK --set-mark 0x"$mark_id"
-    iptables -w -t mangle -A PREROUTING -m set --match-set "$bypass" dst -j CONNMARK --restore-mark
-    i=$((i+1))
-done
+        echo "$saved_rules" | grep -qE -- "--match-set $bypass dst -j CONNMARK --set-mark" || {
+            $table_cmd -w -t mangle -A PREROUTING -m conntrack --ctstate NEW -m set --match-set "$bypass" dst -j CONNMARK --set-mark 0x"$mark_id"
+        }
 
-# ipv6
-ip6tables_mangle_save=$(ip6tables-save -t mangle)
-i=0
-for policy in $policies; do
-    bypassv6=$(echo $bypassesv6 | cut -d' ' -f$((i+1)))
-    mark_id=$(eval echo \$mark_ids_$i)
+        echo "$saved_rules" | grep -qE -- "--match-set $bypass dst -j CONNMARK --restore-mark" || {
+            $table_cmd -w -t mangle -A PREROUTING -m set --match-set "$bypass" dst -j CONNMARK --restore-mark
+        }
 
-    ! ipset list "$bypassv6" >/dev/null 2>&1 && i=$((i+1)) && continue
+        i=$((i + 1))
+    done
+}
 
-    if echo "$ip6tables_mangle_save" | grep -qE -- "--match-set $bypassv6 dst -j CONNMARK --restore-mark"; then
-        i=$((i+1))
-        continue
-    fi
-
-    ip6tables -w -t mangle -A PREROUTING -m conntrack --ctstate NEW -m set --match-set "$bypassv6" dst -j CONNMARK --set-mark 0x"$mark_id"
-    ip6tables -w -t mangle -A PREROUTING -m set --match-set "$bypassv6" dst -j CONNMARK --restore-mark
-    i=$((i+1))
-done
+[ "$type" = "iptables" ] && apply_rules iptables "$bypasses" "$(iptables-save -t mangle)"
+[ "$type" = "ip6tables" ] && apply_rules ip6tables "$bypassesv6" "$(ip6tables-save -t mangle)"
 
 # nginx proxy
 NGINX_CONF="/tmp/nginx/nginx.conf"
