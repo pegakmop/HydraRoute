@@ -340,7 +340,7 @@ os:
   rlimit_nofile: 0
 schema_version: 29
 EOF
-sed -i "s/IP_ADDRESS_BR0/$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)/g" /opt/etc/AdGuardHome/AdGuardHome.yaml
+	sed -i "s/IP_ADDRESS_BR0/$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)/g" /opt/etc/AdGuardHome/AdGuardHome.yaml
 }
 
 # Домены
