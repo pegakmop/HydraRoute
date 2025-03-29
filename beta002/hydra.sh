@@ -4,12 +4,8 @@
 LOG="/opt/var/log/HydraRoute.log"
 printf "\n%s Запуск установки\n" "$(date "+%Y-%m-%d %H:%M:%S")" >>"$LOG" 2>&1
 REQUIRED_VERSION="4.2.3"
-IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
 AVAILABLE_SPACE=$(df /opt | awk 'NR==2 {print $4}')
-## переменные для конфига AGH
-PASSWORD=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
-rule1='||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
 ## анимация
 animation() {
 	local pid=$1
@@ -163,11 +159,11 @@ http:
   pprof:
     port: 6060
     enabled: false
-  address: $IP_ADDRESS:3000
+  address: IP_ADDRESS_BR0:3000
   session_ttl: 720h
 users:
   - name: admin
-    password: $PASSWORD
+    password: $2y$10$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -184,21 +180,18 @@ dns:
   ratelimit_whitelist: []
   refuse_any: true
   upstream_dns:
-    - tls://dns.google
-    - tls://one.one.one.one
-    - tls://p0.freedns.controld.com
-    - tls://dot.sb
-    - tls://dns.nextdns.io
+    - tls://dns.adguard-dns.com
     - tls://dns.quad9.net
+    - tls://dns.google
+    - tls://common.dot.dns.yandex.net
   upstream_dns_file: ""
   bootstrap_dns:
-    - 9.9.9.9
-    - 1.1.1.1
-    - 8.8.8.8
-    - 149.112.112.10
     - 94.140.14.14
+    - 9.9.9.9
+    - 8.8.8.8
+    - 77.88.8.8
   fallback_dns: []
-  upstream_mode: load_balance
+  upstream_mode: parallel
   fastest_timeout: 1s
   allowed_clients: []
   disallowed_clients: []
@@ -227,7 +220,7 @@ dns:
   bootstrap_prefer_ipv6: false
   upstream_timeout: 10s
   private_networks: []
-  use_private_ptr_resolvers: true
+  use_private_ptr_resolvers: false
   local_ptr_upstreams: []
   use_dns64: false
   dns64_prefixes: []
@@ -253,55 +246,23 @@ tls:
 querylog:
   dir_path: ""
   ignored: []
-  interval: 24h
+  interval: 720h
   size_memory: 1000
   enabled: false
   file_enabled: true
 statistics:
   dir_path: ""
   ignored: []
-  interval: 24h
+  interval: 720h
   enabled: false
 filters:
   - enabled: true
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
     name: AdGuard DNS filter
     id: 1
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt
-    name: AdAway Default Blocklist
-    id: 2
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_59.txt
-    name: AdGuard DNS Popup Hosts filter
-    id: 1737211801
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_30.txt
-    name: Phishing URL Blocklist (PhishTank and OpenPhish)
-    id: 1737211802
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_42.txt
-    name: ShadowWhisperer's Malware List
-    id: 1737211803
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_9.txt
-    name: The Big List of Hacked Malware Web Sites
-    id: 1737211804
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_63.txt
-    name: HaGeZi's Windows/Office Tracker Blocklist
-    id: 1737211805
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_7.txt
-    name: Perflyst and Dandelion Sprout's Smart-TV Blocklist
-    id: 1737211806
-  - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_12.txt
-    name: Dandelion Sprout's Anti-Malware List
-    id: 1737211807
 whitelist_filters: []
 user_rules:
-  - '$rule1'
+  - ""
 dhcp:
   enabled: false
   interface_name: ""
@@ -329,31 +290,29 @@ filtering:
   protection_disabled_until: null
   safe_search:
     enabled: false
-    bing: true
-    duckduckgo: true
-    ecosia: true
-    google: true
-    pixabay: true
-    yandex: true
-    youtube: true
+    bing: false
+    duckduckgo: false
+    ecosia: false
+    google: false
+    pixabay: false
+    yandex: false
+    youtube: false
   blocking_mode: default
   parental_block_host: family-block.dns.adguard.com
   safebrowsing_block_host: standard-block.dns.adguard.com
   rewrites:
     - domain: my.keenetic.net
-      answer: $IP_ADDRESS
+      answer: IP_ADDRESS_BR0
     - domain: hr.net
-      answer: $IP_ADDRESS
-    - domain: hr.local
-      answer: $IP_ADDRESS
+      answer: IP_ADDRESS_BR0
   safe_fs_patterns:
     - /opt/etc/AdGuardHome/userfilters/*
   safebrowsing_cache_size: 1048576
   safesearch_cache_size: 1048576
   parental_cache_size: 1048576
   cache_time: 30
-  filters_update_interval: 24
-  blocked_response_ttl: 10
+  filters_update_interval: 72
+  blocked_response_ttl: 5
   filtering_enabled: true
   parental_enabled: false
   safebrowsing_enabled: false
@@ -381,6 +340,7 @@ os:
   rlimit_nofile: 0
 schema_version: 29
 EOF
+sed -i "s/IP_ADDRESS_BR0/$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)/g" /opt/etc/AdGuardHome/AdGuardHome.yaml
 }
 
 # Домены
