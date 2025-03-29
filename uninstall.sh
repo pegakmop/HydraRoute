@@ -59,9 +59,9 @@ files_uninstall() {
 
 # удаление политик
 policy_uninstall() {
-	ndmc -c 'no ip policy HydraRoute1st'
-	ndmc -c 'no ip policy HydraRoute2nd'
-	ndmc -c 'no ip policy HydraRoute3rd'
+	for suffix in 1st 2nd 3rd; do
+		ndmc -c "no ip policy HydraRoute$suffix"
+	done
 	ndmc -c 'system configuration save'
 	sleep 2
 }
@@ -88,16 +88,16 @@ enable_ipv6_and_dns() {
     iface=$1
     via=$2
 
-    ndmc -c "interface $iface ipv6 address auto" 2>/dev/null
-    ndmc -c "interface $iface ip name-servers" 2>/dev/null
+    ndmc -c "interface $iface ipv6 address auto"
+    ndmc -c "interface $iface ip name-servers"
 
     if [ -n "$via" ]; then
-      ndmc -c "interface $via ipv6 address auto" 2>/dev/null
-      ndmc -c "interface $via ip name-servers" 2>/dev/null
+      ndmc -c "interface $via ipv6 address auto"
+      ndmc -c "interface $via ip name-servers"
     fi
   done
 
-  ndmc -c 'system configuration save' 2>/dev/null
+  ndmc -c 'system configuration save'
   sleep 2
 }
 
