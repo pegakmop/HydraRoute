@@ -85,14 +85,15 @@ EOF
 	cat << 'EOF' > /opt/etc/ndm/netfilter.d/010-hydra.sh
 #!/bin/sh
 
-[ "$type" = "iptables" ] || [ "$type" = "ip6tables" ] || exit
-[ "$table" = "mangle" ] || exit
+[ "$type" = "iptables" ] || [ "$type" = "ip6tables" ] || exit 0
+[ "$table" = "mangle" ] || exit 0
 
 policies="HydraRoute1st HydraRoute2nd HydraRoute3rd"
 bypasses="hr1 hr2 hr3"
 bypassesv6="hr1v6 hr2v6 hr3v6"
 
-policy_data=$(curl -kfsS localhost:79/rci/show/ip/policy/) || exit 1
+policy_data=$(curl -kfsS localhost:79/rci/show/ip/policy/)
+[ $? -ne 0 ] || [ -z "$policy_data" ] && exit 0
 
 i=1
 for policy in $policies; do
@@ -104,36 +105,35 @@ done
 apply_rules() {
     table_cmd="$1"
     bypasses_list="$2"
-    saved_rules="$3"
 
     i=1
     for bypass in $bypasses_list; do
         eval "mark_id=\$mark_$i"
-        [ "$mark_id" = "null" ] && i=$((i + 1)) && continue
+        [ "$mark_id" = "null" ] || [ -z "$mark_id" ] && i=$((i + 1)) && continue
 
         ipset list "$bypass" >/dev/null 2>&1 || { i=$((i + 1)); continue; }
 
-        echo "$saved_rules" | grep -qE -- "--match-set $bypass dst -j CONNMARK --set-mark" || {
-            $table_cmd -w -t mangle -A PREROUTING -m conntrack --ctstate NEW -m set --match-set "$bypass" dst -j CONNMARK --set-mark 0x"$mark_id"
-        }
+        rule1="-m conntrack --ctstate NEW -m set --match-set $bypass dst -j CONNMARK --set-xmark 0x$mark_id/0xffffffff"
+        rule2="-m set --match-set $bypass dst -j CONNMARK --restore-mark"
 
-        echo "$saved_rules" | grep -qE -- "--match-set $bypass dst -j CONNMARK --restore-mark" || {
-            $table_cmd -w -t mangle -A PREROUTING -m set --match-set "$bypass" dst -j CONNMARK --restore-mark
-        }
+        $table_cmd -w -t mangle -C PREROUTING $rule1 2>/dev/null || \
+            $table_cmd -w -t mangle -A PREROUTING $rule1
+
+        $table_cmd -w -t mangle -C PREROUTING $rule2 2>/dev/null || \
+            $table_cmd -w -t mangle -A PREROUTING $rule2
 
         i=$((i + 1))
     done
 }
 
-[ "$type" = "iptables" ] && apply_rules iptables "$bypasses" "$(iptables-save -t mangle)"
-[ "$type" = "ip6tables" ] && apply_rules ip6tables "$bypassesv6" "$(ip6tables-save -t mangle)"
+[ "$type" = "iptables" ] && apply_rules iptables "$bypasses"
+[ "$type" = "ip6tables" ] && apply_rules ip6tables "$bypassesv6"
 
 # nginx proxy
 NGINX_CONF="/tmp/nginx/nginx.conf"
 if grep -q "hr.net" "$NGINX_CONF"; then
-    exit
+    exit 0
 fi
-
 IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 sed -i '$ s/}$//' "$NGINX_CONF"
 cat <<EOT >> "$NGINX_CONF"
@@ -146,8 +146,9 @@ cat <<EOT >> "$NGINX_CONF"
     }
 }
 EOT
-
 nginx -s reload
+
+exit 0
 EOF
 	chmod +x /opt/etc/ndm/netfilter.d/010-hydra.sh
 }
