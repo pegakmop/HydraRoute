@@ -28,7 +28,7 @@ opkg_uninstall() {
 	/opt/etc/init.d/S99adguardhome stop
 	/opt/etc/init.d/S99hpanel stop
 	/opt/etc/init.d/S99hrpanel stop
-	opkg remove adguardhome-go ipset iptables jq node-npm node
+	opkg remove hydraroute adguardhome-go ipset iptables jq node-npm node
 }
 
 # удаление файлов
