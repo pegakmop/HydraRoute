@@ -439,7 +439,7 @@ EOF
 	chmod +x /opt/etc/init.d/S99hrpanel
 }
 
-# Отключение ipv6 и DNS провайдера
+# Отключение ipv6 #и DNS провайдера
 disable_ipv6_and_dns() {
 	interfaces=$(curl -kfsS "http://localhost:79/rci/show/interface/" | jq -r '
 	  to_entries[] | 
@@ -453,11 +453,11 @@ disable_ipv6_and_dns() {
 	  via=$2
 
 	  ndmc -c "no interface $iface ipv6 address" 2>/dev/null
-	  ndmc -c "interface $iface no ip name-servers" 2>/dev/null
+	  #ndmc -c "interface $iface no ip name-servers" 2>/dev/null
 
 	  if [ -n "$via" ]; then
 		ndmc -c "no interface $via ipv6 address" 2>/dev/null
-		ndmc -c "interface $via no ip name-servers" 2>/dev/null
+		#ndmc -c "interface $via no ip name-servers" 2>/dev/null
 	  fi
 	done
 
