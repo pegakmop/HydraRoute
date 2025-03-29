@@ -154,7 +154,7 @@ agh_setup() {
 	##системный лог - off
 	sed -i 's/ *\$LOG//g' /opt/etc/AdGuardHome/adguardhome.conf
 	##кастомная конфигурация
-	cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
+	cat << 'EOF' > /opt/etc/AdGuardHome/AdGuardHome.yaml
 http:
   pprof:
     port: 6060
