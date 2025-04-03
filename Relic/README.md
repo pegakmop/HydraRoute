@@ -1,6 +1,6 @@
-**v.0.0.1b(202501300900)**
+**Эта версия более не поддерживается! Инструкции могуть быть не актуальны!**
 
-# HydraRoute
+# HydraRoute v.0.0.1b(202501300900)
 
 **Основная цель** — перенаправление трафика к **отдельным доменам** через VPN. Все, что не указано в списке, будет открываться напрямую.
 
@@ -8,7 +8,7 @@
 1. Подключитесь к роутеру по SSH (к Entware).
 2. Выполните команду:
 ```
-curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/beta001/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
+curl -L -s "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/Relic/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
 ```
 3. Выберите VPN из списка.
 
@@ -48,5 +48,5 @@ curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads
 
 ## Удаление:
 ```
-curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
+curl -Ls "https://ground-zerro.github.io/release/keenetic/hr-uninstall.sh" | sh
 ```

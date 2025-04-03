@@ -399,7 +399,7 @@ install_panel() {
 	chmod 777 /opt/etc/init.d/S99hpanel
 	rm -rf /opt/etc/HydraRoute/
 	rm -r /opt/etc/init.d/S99hpanel
-	curl -Ls --retry 6 --retry-delay 5 --max-time 5 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/beta001/webpanel/hpanel.tar"
+	curl -Ls --retry 6 --retry-delay 5 --max-time 5 -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/Relic/webpanel/hpanel.tar"
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
