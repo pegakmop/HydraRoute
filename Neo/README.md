@@ -104,7 +104,7 @@ logfile=/opt/var/log/hrneo.log
 | `neo restart` | Перезапуск       |
 
 Альтернативно:
-```sh
+```
 /opt/etc/init.d/S99hrneo status|start|stop|restart
 ```
 
