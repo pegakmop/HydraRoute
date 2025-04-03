@@ -108,9 +108,14 @@ agh restart
 
 ## ❌ Удаление
 
-Для полного удаления:
+Стандартно:
 ```
-curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
+opkg remove hydraroute
+```
+
+Полное удаление (в т.ч. файлы, логи etc.) c откатом всех изменений в системе к стандартным:
+```
+curl -Ls "https://ground-zerro.github.io/release/keenetic/hr-uninstall.sh" | sh
 ```
 
 ---
