@@ -145,7 +145,7 @@ ipset flush HydraRoutev6      # IPv6
 
 1. 📦 Добавить [репозиторий](https://ground-zerro.github.io/release/) в Entware:
 ```
-curl -Ls "ssilka_budet_pozghe" | sh
+curl -Ls "https://ground-zerro.github.io/release/keenetic/install-feed.sh" | sh
 ```
 
 2. 🚀 Установить HydraRoute Neo:
