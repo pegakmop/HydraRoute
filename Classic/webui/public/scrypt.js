@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 			li.innerHTML = `
 				<label class="domain-entry" style="display: flex; align-items: center; gap: 10px;">
 					<input type="checkbox" name="services[]" value="${service.url}">
-					<div class="domain-checkbox"><img src="assets/sprite/check-mark-small.svg" alt="✓"></div>
+					<div class="domain-checkbox"><img src="/static/assets/sprite/check-mark-small.svg" alt="✓"></div>
 					<span class="checkbox-label-text">${service.name}</span>
 				</label>
 			`;
@@ -164,14 +164,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     updatePolicyButtons();
 
-    function sanitizeInput(input) {
+    function sanitizeInput(input, forUi = false) {
         input = input.trim();
         if (input.length === 0) return '';
         input = input.replace(/[\r\n:; ]+/g, ',');
         input = input.replace(/,+/g, ',');
         input = input.replace(/[^a-zA-Z0-9#.,-]/g, '');
         input = input.split(',').filter(domain => /\w+\.\w{2,}$/.test(domain));
-        return input.length > 0 ? input.join(',') : '';
+        return input.length > 0 ? input.join(forUi ? ', ' : ',') : '';
     }
 
 	function saveCurrentPolicy() {
@@ -197,17 +197,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 				<label class="domain-entry">
 					<input type="checkbox" ${active ? "checked" : ""}>
 					<div class="domain-checkbox">
-						<img src="assets/sprite/check-mark-small.svg" alt="✓">
+						<img src="/static/assets/sprite/check-mark-small.svg" alt="✓">
 					</div>
 				</label>
 				<div class="domain-content">
 					<div class="domain-controls">
 						<input type="text" class="description" value="${description}" placeholder="Описание">
 					</div>
-					<textarea>${sanitizeInput(value)}</textarea>
+					<textarea>${sanitizeInput(value, true)}</textarea>
 					<div class="remove-container">
 						<button class="remove">
-							<img src="assets/sprite/delete.svg" alt="Удалить" class="delete-icon">
+							<img src="/static/assets/sprite/delete.svg" alt="Удалить" class="delete-icon">
 							<span>удалить</span>
 						</button>
 					</div>
