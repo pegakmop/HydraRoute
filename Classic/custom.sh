@@ -63,7 +63,7 @@ get_interfaces() {
 # Установка пакетов
 opkg_install() {
 	opkg update
-	opkg install ip-full
+	opkg install ip-full jq
 }
 
 # Формирование файлов
@@ -92,7 +92,6 @@ if [ -z "\$(ip route list table 1001)" ]; then
     ip route add default dev \$system_name table 1001
 fi
 EOF
-	
 
 ## cкрипты маркировки трафика
 	cat << EOF > /opt/etc/ndm/netfilter.d/010-bypass.sh
