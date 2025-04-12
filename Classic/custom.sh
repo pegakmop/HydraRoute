@@ -115,9 +115,7 @@ domain_add() {
 	config_file="/opt/etc/AdGuardHome/ipset.conf"
 	pattern="googlevideo.com\|ggpht.com\|googleapis.com\|googleusercontent.com\|gstatic.com\|nhacmp3youtube.com\|youtu.be\|youtube.com\|ytimg.com"
 	sed -i "/$pattern/d" "$config_file"
-	cat << EOF >> "$config_file"
-googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/bypass
-EOF
+	echo "googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/bypass" >> "$config_file"
 }
 
 # Установка прав на скрипты
