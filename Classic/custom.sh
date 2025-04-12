@@ -109,6 +109,7 @@ iptables -w -t mangle -A PREROUTING ! -i $net_interface -m conntrack --ctstate N
 iptables -w -t mangle -C PREROUTING ! -i $net_interface -m set --match-set bypass dst -j CONNMARK --restore-mark 2>/dev/null || \
 iptables -w -t mangle -A PREROUTING ! -i $net_interface -m set --match-set bypass dst -j CONNMARK --restore-mark
 EOF
+}
 
 # Базовый список доменов для костыля с 3D защитой на всякий случай... ))
 domain_add() {
