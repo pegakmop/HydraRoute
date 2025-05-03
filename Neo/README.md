@@ -86,6 +86,7 @@ interfaceName=br0
 reconnect=true
 log=false
 logfile=/opt/var/log/hrneo.log
+clearIPSet=true
 ```
 
 - `watchlistPath` — полный путь к файлу со списком доменов.
