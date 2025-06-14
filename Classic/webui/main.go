@@ -50,6 +50,7 @@ func main() {
 func setupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	
+	// API маршруты с аутентификацией
 	authRoutes := map[string]http.HandlerFunc{
 		"/":                indexHandler,
 		"/change-password": changePasswordHandler,
@@ -66,10 +67,12 @@ func setupRoutes() *http.ServeMux {
 		mux.HandleFunc(path, authMiddleware(handler))
 	}
 	
+	// Публичные маршруты
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/proxy-fetch", proxyFetchHandler)
 	
+	// Статические файлы
 	setupStaticRoutes(mux)
 	
 	return mux
