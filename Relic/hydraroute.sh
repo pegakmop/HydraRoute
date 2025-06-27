@@ -395,7 +395,7 @@ rule_exists() {
 # Разрешаем входящий трафик с tun+
 if ! rule_exists "-A INPUT -i tun+ -j ACCEPT"; then
     iptables -A INPUT -i tun+ -j ACCEPT
-    logger "020-sing-box.sh: Добавлено правило INPUT для tun+"
+    logger "020-sing-box.sh: Добавлено новое правило INPUT для tun+"
 else
     logger "020-sing-box.sh: Правило INPUT для tun+ уже существует"
 fi
@@ -403,7 +403,7 @@ fi
 # Разрешаем маршрутизацию tun+ -> сеть
 if ! rule_exists "-A FORWARD -i tun+ -j ACCEPT"; then
     iptables -A FORWARD -i tun+ -j ACCEPT
-    logger "020-sing-box.sh: Добавлено правило FORWARD (вход) для tun+"
+    logger "020-sing-box.sh: Добавлено новое правило FORWARD (вход) для tun+"
 else
     logger "020-sing-box.sh: Правило FORWARD (вход) для tun+ уже существует"
 fi
@@ -411,7 +411,7 @@ fi
 # Разрешаем маршрутизацию сеть -> tun+
 if ! rule_exists "-A FORWARD -o tun+ -j ACCEPT"; then
     iptables -A FORWARD -o tun+ -j ACCEPT
-    logger "020-sing-box.sh: Добавлено правило FORWARD (выход) для tun+"
+    logger "020-sing-box.sh: Добавлено новое правило FORWARD (выход) для tun+"
 else
     logger "020-sing-box.sh: Правило FORWARD (выход) для tun+ уже существует"
 fi
