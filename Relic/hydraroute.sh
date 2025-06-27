@@ -381,6 +381,45 @@ chatgpt.com,openai.com,oaistatic.com,files.oaiusercontent.com,gpt3-openai.com,op
 EOF
 }
 
+# Создание скрипта маршрутизации для tun+
+create_tun_script() {
+  echo "Создание скрипта для настройки tun+..."
+  cat << 'EOF' > /opt/etc/ndm/netfilter.d/020-sing-box.sh
+#!/opt/bin/sh
+
+# Проверка существования правила
+rule_exists() {
+    iptables-save | grep -q -- "$1"
+}
+
+# Разрешаем входящий трафик с tun+
+if ! rule_exists "-A INPUT -i tun+ -j ACCEPT"; then
+    iptables -A INPUT -i tun+ -j ACCEPT
+    logger "020-sing-box.sh: Добавлено правило INPUT для tun+"
+else
+    logger "020-sing-box.sh: Правило INPUT для tun+ уже существует"
+fi
+
+# Разрешаем маршрутизацию tun+ -> сеть
+if ! rule_exists "-A FORWARD -i tun+ -j ACCEPT"; then
+    iptables -A FORWARD -i tun+ -j ACCEPT
+    logger "020-sing-box.sh: Добавлено правило FORWARD (вход) для tun+"
+else
+    logger "020-sing-box.sh: Правило FORWARD (вход) для tun+ уже существует"
+fi
+
+# Разрешаем маршрутизацию сеть -> tun+
+if ! rule_exists "-A FORWARD -o tun+ -j ACCEPT"; then
+    iptables -A FORWARD -o tun+ -j ACCEPT
+    logger "020-sing-box.sh: Добавлено правило FORWARD (выход) для tun+"
+else
+    logger "020-sing-box.sh: Правило FORWARD (выход) для tun+ уже существует"
+fi
+EOF
+
+  chmod +x /opt/etc/ndm/netfilter.d/020-sing-box.sh
+}
+
 # Установка прав на скрипты
 chmod_set() {
 	chmod +x /opt/etc/init.d/S52ipset
@@ -504,6 +543,10 @@ animation $! "Настройка AdGuard Home"
 # Добавление доменов в ipset
 domain_add >>"$LOG" 2>&1 &
 animation $! "Добавление доменов в ipset"
+
+# Создание скрипта для туннеля tun+
+create_tun_script >>"$LOG" 2>&1 &
+animation $! "Настройка маршрутизации для tun+"
 
 # Установка прав на выполнение скриптов
 chmod_set >>"$LOG" 2>&1 &
