@@ -363,14 +363,6 @@ timeoutData := make([]byte, 4)
 PutUint32NetworkOrder(timeoutData, timeoutVal)  // Работает на ЛЮБОЙ архитектуре
 ```
 
-**Поддерживаемые платформы:**
-
-| Архитектура | Byte Order | Старая версия | Новая версия |
-|-------------|------------|---------------|--------------|
-| mipsel-3.4 | Little-endian | ⚠️ Проблемы с timeout | ✅ Работает |
-| mips-3.4 | Big-endian | ⚠️ Проблемы с timeout | ✅ Работает |
-| aarch64-3.10 | Little-endian | ⚠️ Проблемы с timeout | ✅ Работает |
-
 ---
 
 ## 7. IPv6 - исправление критической ошибки
