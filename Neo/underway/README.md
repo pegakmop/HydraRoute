@@ -61,7 +61,7 @@ if reconnect == "true" {
 ```
 hrneo_main.go           - Главный файл, инициализация, обработка сигналов
 nflog_monitor.go        - Перехват DNS через NFLOG (ядро Linux)
-netlink_ipset_impl.go   - Низкоуровневая работа с ipset через netlink
+netlink_ipset.go   - Низкоуровневая работа с ipset через netlink
 ipset_manager.go        - Высокоуровневый интерфейс для ipset операций
 conntrack_manager.go    - Управление conntrack (разрыв соединений)
 helpers_functions.go    - Вспомогательные функции (config, iptables, etc)
